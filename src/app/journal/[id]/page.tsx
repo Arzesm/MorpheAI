@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
-import { dreamService } from '@/lib/supabase'
+import { dreamService, type Dream } from '@/lib/supabase'
 
 interface PageProps {
   params: { id: string }
@@ -15,7 +15,7 @@ export default function DreamDetailPage({ params }: PageProps) {
   const { id } = params
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
-  const [dream, setDream] = useState<any>(null)
+  const [dream, setDream] = useState<Dream | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   
@@ -192,7 +192,7 @@ export default function DreamDetailPage({ params }: PageProps) {
 
       {/* Tags and Archetype */}
       <div className="flex flex-wrap gap-2">
-        {dream.tags.map((tag: string) => (
+        {dream.tags?.map((tag: string) => (
           <Link
             key={tag}
             href={`/journal?tag=${encodeURIComponent(tag)}`}
