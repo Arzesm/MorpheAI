@@ -192,7 +192,7 @@ export default function DreamDetailPage({ params }: PageProps) {
 
       {/* Tags and Archetype */}
       <div className="flex flex-wrap gap-2">
-        {dream.tags.map((tag) => (
+        {dream.tags.map((tag: string) => (
           <Link
             key={tag}
             href={`/journal?tag=${encodeURIComponent(tag)}`}
