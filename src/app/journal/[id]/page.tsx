@@ -2,7 +2,6 @@
 
 import { Calendar, Heart, Tag, Sparkles, Image as ImageIcon, MessageCircle, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
@@ -340,18 +339,31 @@ export default function DreamDetailPage({ params }: PageProps) {
           </div>
         ) : dream.has_image && dream.image_url ? (
           <div className="relative rounded-lg overflow-hidden bg-night-deep-blue/50">
-            <div className="relative w-full aspect-video">
-              <Image
-                src={dream.image_url}
+            <div className="relative w-full" style={{ minHeight: '400px', maxHeight: '600px' }}>
+              <img 
+                src={dream.image_url} 
                 alt={`Визуализация сна: ${dream.title}`}
-                fill
-                className="object-contain rounded-lg"
-                sizes="(max-width: 768px) 100vw, 600px"
-                unoptimized={dream.image_url?.includes('oaidalleapiprodscus')}
+                className="w-full h-full object-contain rounded-lg"
+                crossOrigin="anonymous"
                 onError={(e) => {
                   console.error('❌ Ошибка загрузки изображения:', dream.image_url)
                   const target = e.target as HTMLImageElement
                   target.style.display = 'none'
+                  const parent = target.parentElement
+                  if (parent) {
+                    parent.innerHTML = `
+                      <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem;">
+                        <div style="text-align: center;">
+                          <div style="font-size: 3rem; margin-bottom: 1rem;">🖼️</div>
+                          <p style="color: rgba(242, 237, 227, 0.6); font-size: 0.875rem;">Не удалось загрузить изображение</p>
+                          <p style="color: rgba(242, 237, 227, 0.4); font-size: 0.75rem; margin-top: 0.5rem;">Попробуйте сгенерировать заново</p>
+                        </div>
+                      </div>
+                    `
+                  }
+                }}
+                onLoad={() => {
+                  console.log('✅ Изображение загружено:', dream.image_url)
                 }}
               />
             </div>
