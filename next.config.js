@@ -9,7 +9,18 @@ const nextConfig = {
         hostname: 'i.postimg.cc',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'oaidalleapiprodscus.blob.core.windows.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.openai.com',
+        pathname: '/**',
+      },
     ],
+    unoptimized: false,
   },
   async headers() {
     return [

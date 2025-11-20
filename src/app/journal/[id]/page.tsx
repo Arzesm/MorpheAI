@@ -2,6 +2,7 @@
 
 import { Calendar, Heart, Tag, Sparkles, Image as ImageIcon, MessageCircle, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
@@ -338,15 +339,24 @@ export default function DreamDetailPage({ params }: PageProps) {
             </div>
           </div>
         ) : dream.has_image && dream.image_url ? (
-          <div className="relative rounded-lg overflow-hidden">
-            <img 
-              src={dream.image_url} 
-              alt={dream.title}
-              className="w-full h-auto rounded-lg"
-              style={{ maxHeight: '600px', objectFit: 'contain' }}
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-night-deep-blue/90 to-transparent p-4">
-              <p className="text-mythic-ivory/80 text-xs">Сгенерировано с помощью DALL-E 3</p>
+          <div className="relative rounded-lg overflow-hidden bg-night-deep-blue/50">
+            <div className="relative w-full aspect-video">
+              <Image
+                src={dream.image_url}
+                alt={`Визуализация сна: ${dream.title}`}
+                fill
+                className="object-contain rounded-lg"
+                sizes="(max-width: 768px) 100vw, 600px"
+                unoptimized={dream.image_url?.includes('oaidalleapiprodscus')}
+                onError={(e) => {
+                  console.error('❌ Ошибка загрузки изображения:', dream.image_url)
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                }}
+              />
+            </div>
+            <div className="mt-2 p-3 bg-night-deep-blue/30 rounded-lg">
+              <p className="text-mythic-ivory/60 text-xs">Сгенерировано с помощью DALL-E 3</p>
             </div>
           </div>
         ) : (
