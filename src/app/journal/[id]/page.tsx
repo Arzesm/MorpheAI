@@ -377,21 +377,54 @@ export default function DreamDetailPage({ params }: PageProps) {
                     className="w-full h-full object-contain rounded-lg"
                     style={{ display: 'block' }}
                     loading="lazy"
-                    crossOrigin="anonymous"
-                    onError={(e) => {
+                    referrerPolicy="no-referrer"
+                    onError={async (e) => {
                       console.error('❌ Ошибка загрузки изображения')
                       console.error('URL:', imageUrl)
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
                       const parent = target.parentElement
                       if (parent) {
+                        // Пробуем загрузить изображение через прокси
+                        try {
+                          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+                          const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+                          
+                          if (supabaseUrl && supabaseKey) {
+                            // Пробуем загрузить через Edge Function прокси
+                            const proxyResponse = await fetch(`${supabaseUrl}/functions/v1/generate-dream-image`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${supabaseKey}`,
+                              },
+                              body: JSON.stringify({
+                                action: 'proxy-image',
+                                imageUrl: imageUrl
+                              })
+                            })
+                            
+                            if (proxyResponse.ok) {
+                              const blob = await proxyResponse.blob()
+                              const blobUrl = URL.createObjectURL(blob)
+                              target.src = blobUrl
+                              target.style.display = 'block'
+                              return
+                            }
+                          }
+                        } catch (proxyError) {
+                          console.error('❌ Ошибка прокси:', proxyError)
+                        }
+                        
+                        // Если прокси не сработал, показываем ошибку
                         parent.innerHTML = `
                           <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem; background: rgba(10, 17, 32, 0.5); border-radius: 0.5rem;">
                             <div style="text-align: center;">
                               <div style="font-size: 3rem; margin-bottom: 1rem;">🖼️</div>
                               <p style="color: rgba(242, 237, 227, 0.6); font-size: 0.875rem; margin-bottom: 0.5rem;">Не удалось загрузить изображение</p>
-                              <p style="color: rgba(242, 237, 227, 0.4); font-size: 0.75rem; margin-bottom: 1rem;">Изображение могло быть удалено или недоступно</p>
-                              <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(30, 144, 255, 0.2); color: rgba(242, 237, 227, 0.8); border: none; border-radius: 0.5rem; cursor: pointer;">Обновить</button>
+                              <p style="color: rgba(242, 237, 227, 0.4); font-size: 0.75rem; margin-bottom: 1rem;">URL изображения мог истечь. Попробуйте сгенерировать изображение заново.</p>
+                              <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(30, 144, 255, 0.2); color: rgba(242, 237, 227, 0.8); border: none; border-radius: 0.5rem; cursor: pointer; margin-right: 0.5rem;">Обновить</button>
+                              <button onclick="if (window.generateImage) window.generateImage()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(139, 92, 246, 0.2); color: rgba(242, 237, 227, 0.8); border: none; border-radius: 0.5rem; cursor: pointer;">Сгенерировать заново</button>
                             </div>
                           </div>
                         `

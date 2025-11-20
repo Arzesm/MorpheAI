@@ -89,21 +89,116 @@ Create a safe, detailed English prompt for DALL-E 3 that follows all these requi
     const revisedPrompt = response.data[0].revised_prompt
 
     console.log('✅ Изображение сгенерировано')
-    console.log('🔗 URL:', imageUrl)
+    console.log('🔗 Временный URL от OpenAI:', imageUrl)
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        imageUrl,
-        revisedPrompt
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
+    // Загружаем изображение и сохраняем в Supabase Storage
+    try {
+      console.log('📥 Загрузка изображения для сохранения...')
+      const imageResponse = await fetch(imageUrl)
+      
+      if (!imageResponse.ok) {
+        throw new Error(`Не удалось загрузить изображение: ${imageResponse.statusText}`)
       }
-    )
+
+      const imageBlob = await imageResponse.blob()
+      const imageArrayBuffer = await imageBlob.arrayBuffer()
+      const imageBytes = new Uint8Array(imageArrayBuffer)
+
+      console.log('💾 Сохранение изображения в Supabase Storage...')
+      
+      // Создаем уникальное имя файла
+      const timestamp = Date.now()
+      const fileName = `dream-images/${timestamp}-${title.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 50)}.png`
+
+      // Загружаем в Supabase Storage через REST API
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || Deno.env.get('NEXT_PUBLIC_SUPABASE_URL')
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+      if (!supabaseUrl || !supabaseServiceKey) {
+        console.warn('⚠️ Supabase Storage не настроен, используем временный URL от OpenAI')
+        return new Response(
+          JSON.stringify({
+            success: true,
+            imageUrl,
+            revisedPrompt,
+            warning: 'Изображение сохранено во временном хранилище OpenAI. Настройте SUPABASE_SERVICE_ROLE_KEY для постоянного хранения.'
+          }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            } 
+          }
+        )
+      }
+
+      // Загружаем в Storage
+      const storageUrl = `${supabaseUrl}/storage/v1/object/dream-images/${fileName}`
+      const uploadResponse = await fetch(storageUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'image/png',
+          'x-upsert': 'true'
+        },
+        body: imageBytes
+      })
+
+      if (uploadResponse.ok) {
+        // Получаем публичный URL
+        const publicUrl = `${supabaseUrl}/storage/v1/object/public/dream-images/${fileName}`
+        console.log('✅ Изображение сохранено в Storage:', publicUrl)
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            imageUrl: publicUrl,
+            revisedPrompt
+          }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            } 
+          }
+        )
+      } else {
+        const errorText = await uploadResponse.text()
+        console.warn('⚠️ Не удалось сохранить в Storage, используем временный URL:', errorText)
+        // Возвращаем временный URL, если Storage недоступен
+        return new Response(
+          JSON.stringify({
+            success: true,
+            imageUrl,
+            revisedPrompt,
+            warning: 'Не удалось сохранить в Storage, используется временный URL'
+          }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            } 
+          }
+        )
+      }
+    } catch (storageError: any) {
+      console.warn('⚠️ Ошибка при сохранении в Storage, используем временный URL:', storageError.message)
+      // Возвращаем временный URL, если сохранение не удалось
+      return new Response(
+        JSON.stringify({
+          success: true,
+          imageUrl,
+          revisedPrompt,
+          warning: 'Не удалось сохранить в Storage, используется временный URL от OpenAI'
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      )
+    }
 
   } catch (error: any) {
     console.error('❌ Ошибка генерации изображения:', error)
