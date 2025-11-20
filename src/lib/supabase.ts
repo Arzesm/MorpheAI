@@ -1,23 +1,30 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+// Ленивая инициализация Supabase клиента
+let supabaseInstance: SupabaseClient | null = null
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('⚠️ Supabase URL или ключ не найдены в .env.local')
+function getSupabaseClient(): SupabaseClient {
+  if (supabaseInstance) {
+    return supabaseInstance
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Создаем фиктивный клиент для статической генерации
+    // В реальном запросе это будет обработано в dreamService
+    supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder-key')
+    return supabaseInstance
+  }
+
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+  return supabaseInstance
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Проверка подключения
-supabase.from('dreams').select('count', { count: 'exact', head: true }).then(({ error, count }) => {
-  if (error) {
-    console.error('❌ Ошибка подключения к Supabase:', error.message)
-    if (error.message.includes('relation') || error.message.includes('does not exist')) {
-      console.error('💡 Таблица "dreams" не существует! Выполните SQL из CREATE_TABLES.sql')
-    }
-  } else {
-    console.log('✅ Подключение к Supabase успешно! Снов в БД:', count)
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return getSupabaseClient()[prop as keyof SupabaseClient]
   }
 })
 
