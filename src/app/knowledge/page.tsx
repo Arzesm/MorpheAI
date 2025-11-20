@@ -44,6 +44,13 @@ export default function KnowledgePage() {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         
+        if (!supabaseUrl || !supabaseKey) {
+          console.error('⚠️ Переменные окружения Supabase не настроены')
+          setArticles([])
+          setHasSearched(true)
+          return
+        }
+        
         // Используем новую функцию для получения новостей из RSS фидов (без OpenAI API)
         const edgeFunctionUrl = `${supabaseUrl}/functions/v1/fetch-sleep-news`
         
