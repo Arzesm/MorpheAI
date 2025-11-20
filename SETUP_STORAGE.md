@@ -10,7 +10,35 @@ URL изображений от DALL-E 3 могут истекать через 
 
 ---
 
-## 📋 Пошаговая инструкция
+## 🚀 Автоматическая настройка (РЕКОМЕНДУЕТСЯ)
+
+### Вариант 1: PowerShell скрипт (Windows)
+
+1. Установите переменные окружения:
+   ```powershell
+   $env:NEXT_PUBLIC_SUPABASE_URL = "https://uhmedcjhbgqewmaaxgan.supabase.co"
+   $env:SUPABASE_SERVICE_ROLE_KEY = "ваш-service-role-key"
+   ```
+
+2. Запустите скрипт:
+   ```powershell
+   .\setup-storage.ps1
+   ```
+
+### Вариант 2: SQL скрипт (универсальный)
+
+1. Откройте SQL Editor в Supabase Dashboard:
+   ```
+   https://supabase.com/dashboard/project/uhmedcjhbgqewmaaxgan/sql/new
+   ```
+
+2. Скопируйте содержимое файла `setup-storage.sql`
+
+3. Вставьте в SQL Editor и нажмите **Run** (F5)
+
+---
+
+## 📋 Ручная настройка (если автоматическая не сработала)
 
 ### Шаг 1: Создайте Storage Bucket
 
