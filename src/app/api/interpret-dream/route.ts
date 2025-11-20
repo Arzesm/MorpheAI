@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 export async function POST(request: NextRequest) {
   try {
     const { title, content } = await request.json()
@@ -17,8 +13,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Проверяем наличие API ключа
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      console.error('❌ OPENAI_API_KEY не установлен')
+      return NextResponse.json(
+        { error: 'OpenAI API ключ не настроен' },
+        { status: 500 }
+      )
+    }
+
+    // Инициализируем OpenAI клиент только при запросе
+    const openai = new OpenAI({
+      apiKey: apiKey,
+    })
+
     console.log('🤖 Запрос интерпретации сна:', title)
-    console.log('🔑 OpenAI Key доступен:', !!process.env.OPENAI_API_KEY)
+    console.log('🔑 OpenAI Key доступен:', !!apiKey)
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4-turbo-preview", // Используем проверенную модель GPT-4 Turbo
