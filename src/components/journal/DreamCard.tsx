@@ -131,7 +131,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
               </div>
               
               <div className="flex flex-wrap gap-2 mb-3">
-                {dream.tags.map((tag) => (
+                {dream.tags.map((tag: string) => (
                   <a
                     key={tag}
                     href={`/journal?tag=${encodeURIComponent(tag)}`}

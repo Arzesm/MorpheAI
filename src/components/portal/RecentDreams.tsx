@@ -111,7 +111,7 @@ export default function RecentDreams() {
                       </div>
                       
                       <div className="flex flex-wrap gap-2">
-                        {dream.tags.slice(0, 3).map((tag) => (
+                        {dream.tags.slice(0, 3).map((tag: string) => (
                           <span key={tag} className="badge badge-primary">
                             #{tag}
                           </span>

@@ -284,7 +284,7 @@ export default function DreamDetailPage({ params }: PageProps) {
             <div>
               <h3 className="text-md font-semibold text-mythic-ivory mb-2">Символы в вашем сне</h3>
               <div className="space-y-3">
-                {dream.interpretation.symbols.map((symbol) => (
+                {dream.interpretation.symbols.map((symbol: { name: string; meaning: string }) => (
                   <div key={symbol.name} className="p-3 bg-mythic-ivory/5 rounded-lg">
                     <h4 className="text-light-ai-blue font-medium text-sm mb-1">{symbol.name}</h4>
                     <p className="text-mythic-ivory/70 text-sm">{symbol.meaning}</p>
@@ -299,7 +299,7 @@ export default function DreamDetailPage({ params }: PageProps) {
             <div>
               <h3 className="text-md font-semibold text-mythic-ivory mb-2">Рекомендации</h3>
               <ul className="space-y-2">
-                {dream.interpretation.recommendations.map((rec, index) => (
+                {dream.interpretation.recommendations.map((rec: string, index: number) => (
                   <li key={index} className="flex items-start space-x-2 text-mythic-ivory/70 text-sm">
                     <span className="text-morphe-blue mt-1">•</span>
                     <span>{rec}</span>

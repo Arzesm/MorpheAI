@@ -265,7 +265,7 @@ export default function EditDreamPage({ params }: PageProps) {
           
           {dream.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {dream.tags.map((tag) => (
+              {dream.tags.map((tag: string) => (
                 <span
                   key={tag}
                   className="px-3 py-1 bg-morphe-blue/20 text-light-ai-blue text-sm rounded-full flex items-center space-x-2"
