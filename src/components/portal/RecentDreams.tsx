@@ -1,0 +1,141 @@
+'use client'
+
+import { BookOpen, Calendar, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { dreamService, Dream } from '@/lib/supabase'
+
+export default function RecentDreams() {
+  const [recentDreams, setRecentDreams] = useState<Dream[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadRecentDreams = async () => {
+      setIsLoading(true)
+      try {
+        const allDreams = await dreamService.getAll()
+        if (allDreams) {
+          // Сортируем по дате (новые сверху) и берём последние 3
+          const sorted = [...allDreams].sort((a, b) => 
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
+          setRecentDreams(sorted.slice(0, 3))
+          console.log('📖 Загружено последних снов:', sorted.slice(0, 3).length)
+        }
+      } catch (error) {
+        console.error('❌ Ошибка загрузки последних снов:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadRecentDreams()
+  }, [])
+
+  const getEmojiForContent = (content: string) => {
+    const lowerContent = content.toLowerCase()
+    if (lowerContent.includes('полёт') || lowerContent.includes('лет')) return '✨'
+    if (lowerContent.includes('дом')) return '🏠'
+    if (lowerContent.includes('лес')) return '🌲'
+    if (lowerContent.includes('вода') || lowerContent.includes('море')) return '🌊'
+    if (lowerContent.includes('город')) return '🏙️'
+    return '💭'
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="section-header flex items-center">
+          <BookOpen size={22} className="mr-2 text-morphe-blue" />
+          Последние сны
+        </h2>
+        <Link href="/journal" className="text-morphe-blue text-sm font-semibold hover:text-light-ai-blue transition-colors flex items-center space-x-1">
+          <span>Все</span>
+          <span>→</span>
+        </Link>
+      </div>
+
+      {isLoading ? (
+        <div className="card p-8 flex justify-center items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-morphe-blue" />
+        </div>
+      ) : recentDreams.length === 0 ? (
+        <div className="card p-8 text-center">
+          <div className="text-5xl mb-3">🌙</div>
+          <p className="text-mythic-ivory/60 mb-4">Пока нет записанных снов</p>
+          <Link href="/journal/new">
+            <button className="btn-primary">
+              Записать первый сон
+            </button>
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {recentDreams.map((dream) => {
+            // Извлекаем чистый текст из HTML для preview
+            const cleanText = dream.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+            const preview = cleanText.substring(0, 80) + (cleanText.length > 80 ? '...' : '')
+            return (
+              <Link key={dream.id} href={`/journal/${dream.id}`}>
+                <div className="card p-5 hover:scale-[1.01] transition-all cursor-pointer group">
+                  <div className="flex items-start space-x-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-morphe-blue/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative text-4xl p-2 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-2xl backdrop-blur-sm">
+                        {getEmojiForContent(dream.content)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-mythic-ivory font-bold text-base mb-2 truncate tracking-tight">
+                        {dream.title}
+                      </h3>
+                      
+                      <p className="text-mythic-ivory/70 text-sm line-clamp-2 mb-3 leading-relaxed">
+                        {preview}
+                      </p>
+                      
+                      <div className="flex items-center space-x-3 text-xs text-mythic-ivory/60 mb-3">
+                        <span className="flex items-center px-2 py-1 rounded-lg bg-mythic-ivory/5">
+                          <Calendar size={12} className="mr-1" />
+                          {formatDate(dream.date)}
+                        </span>
+                        <span className="flex items-center">
+                          {dream.emotion_emoji} <span className="ml-1">{dream.emotion}</span>
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {dream.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="badge badge-primary">
+                            #{tag}
+                          </span>
+                        ))}
+                        {dream.tags.length > 3 && (
+                          <span className="badge badge-primary opacity-60">
+                            +{dream.tags.length - 3}
+                          </span>
+                        )}
+                        {dream.archetype && dream.archetype !== 'Не определен' && (
+                          <span className="badge badge-purple">
+                            {dream.archetype}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+

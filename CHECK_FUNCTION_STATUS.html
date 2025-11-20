@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка статуса Edge Functions</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .function-check {
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #ccc;
+        }
+        .function-check.checking {
+            background: #f0f4ff;
+            border-color: #3b82f6;
+        }
+        .function-check.success {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+        .function-check.error {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+        .function-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status.checking {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .status.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .details {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .instructions {
+            background: #fff7ed;
+            border: 2px solid #fb923c;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #c2410c;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+        }
+        .link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Проверка Edge Functions</h1>
+        <p class="subtitle">MorpheAI - Статус функций Supabase</p>
+
+        <button onclick="checkFunctions()">🔄 Проверить статус функций</button>
+
+        <div id="results"></div>
+
+        <div id="instructions" style="display: none;" class="instructions">
+            <h3>⚠️ Функция генерации изображений НЕ РАЗВЕРНУТА</h3>
+            <p><strong>Что нужно сделать:</strong></p>
+            <ol>
+                <li>Откройте: <a href="https://supabase.com/dashboard/project/uhmedcjhbgqewmaaxgan/functions" target="_blank" class="link">Supabase Dashboard → Functions</a></li>
+                <li>Нажмите <strong>"New Function"</strong></li>
+                <li>Имя функции: <code>generate-dream-image</code></li>
+                <li>Скопируйте код из файла:<br><code>supabase/functions/generate-dream-image/index.ts</code></li>
+                <li>Вставьте код в редактор</li>
+                <li>Нажмите <strong>"Deploy"</strong></li>
+                <li>Подождите 10-30 секунд</li>
+                <li>Вернитесь сюда и нажмите "Проверить статус" снова</li>
+            </ol>
+            <p><strong>📖 Подробная инструкция:</strong> <code>SIMPLE_DEPLOY_STEPS.md</code></p>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://uhmedcjhbgqewmaaxgan.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVobWVkY2poYmdxZXdtYWF4Z2FuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2MDUxNDcsImV4cCI6MjA3OTE4MTE0N30._BR61VHIYhXFd6TTiWCgU6Qm26QWUd3AUnseL_IQO9g';
+
+        async function checkFunctions() {
+            const resultsDiv = document.getElementById('results');
+            const instructionsDiv = document.getElementById('instructions');
+            resultsDiv.innerHTML = '';
+            instructionsDiv.style.display = 'none';
+
+            const functions = [
+                { name: 'interpret-dream', description: 'AI интерпретация снов' },
+                { name: 'generate-dream-image', description: 'Генерация изображений DALL-E 3' }
+            ];
+
+            let allOnline = true;
+
+            for (const func of functions) {
+                const funcDiv = document.createElement('div');
+                funcDiv.className = 'function-check checking';
+                funcDiv.innerHTML = `
+                    <div class="function-name">${func.name}</div>
+                    <div class="status checking"><span class="spinner"></span> Проверка...</div>
+                    <div class="details">${func.description}</div>
+                `;
+                resultsDiv.appendChild(funcDiv);
+
+                try {
+                    const response = await fetch(`${SUPABASE_URL}/functions/v1/${func.name}`, {
+                        method: 'OPTIONS',
+                        headers: {
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    });
+
+                    if (response.ok || response.status === 200 || response.status === 204) {
+                        funcDiv.className = 'function-check success';
+                        funcDiv.querySelector('.status').innerHTML = '✅ Развернута';
+                        funcDiv.querySelector('.status').className = 'status online';
+                        funcDiv.querySelector('.details').innerHTML += '<br><span style="color: #10b981; font-weight: 600;">Функция работает корректно</span>';
+                    } else {
+                        throw new Error('Function not deployed');
+                    }
+                } catch (error) {
+                    allOnline = false;
+                    funcDiv.className = 'function-check error';
+                    funcDiv.querySelector('.status').innerHTML = '❌ Не развернута';
+                    funcDiv.querySelector('.status').className = 'status offline';
+                    funcDiv.querySelector('.details').innerHTML += '<br><span style="color: #ef4444; font-weight: 600;">Требуется развертывание через Dashboard</span>';
+                }
+            }
+
+            if (!allOnline) {
+                instructionsDiv.style.display = 'block';
+            }
+        }
+
+        // Автоматическая проверка при загрузке страницы
+        window.addEventListener('load', checkFunctions);
+    </script>
+</body>
+</html>
+
