@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Plus, Search, Filter, X } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -9,7 +9,7 @@ import DreamCard from '@/components/journal/DreamCard'
 import FilterModal from '@/components/journal/FilterModal'
 import { dreamService } from '@/lib/supabase'
 
-export default function JournalPage() {
+function JournalContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tagFromUrl = searchParams.get('tag')
@@ -248,6 +248,35 @@ export default function JournalPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function JournalPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-5 pb-6 animate-fade-in">
+        <Header />
+        <div>
+          <h1 className="text-3xl font-bold text-mythic-ivory tracking-tight">Дневник снов</h1>
+          <p className="text-mythic-ivory/50 text-sm mt-1">Записи ваших сновидений</p>
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card p-5 animate-pulse">
+              <div className="flex items-start space-x-4">
+                <div className="w-16 h-16 bg-mythic-ivory/10 rounded-2xl" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-4 bg-mythic-ivory/10 rounded w-3/4" />
+                  <div className="h-3 bg-mythic-ivory/10 rounded w-full" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
+      <JournalContent />
+    </Suspense>
   )
 }
 
