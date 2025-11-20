@@ -8,23 +8,34 @@ function getSupabaseClient(): SupabaseClient {
     return supabaseInstance
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+  // Для статической генерации создаем клиент с placeholder значениями
+  // В реальном запросе переменные окружения будут доступны
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Создаем фиктивный клиент для статической генерации
-    // В реальном запросе это будет обработано в dreamService
-    supabaseInstance = createClient('https://placeholder.supabase.co', 'placeholder-key')
-    return supabaseInstance
+    if (typeof window === 'undefined') {
+      // Серверная сторона (SSR/SSG) - создаем клиент с placeholder
+      supabaseInstance = createClient(
+        'https://placeholder.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+      )
+      return supabaseInstance
+    }
+    // Клиентская сторона - выбрасываем ошибку
+    throw new Error('Supabase URL и ключ должны быть установлены')
   }
 
   supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
   return supabaseInstance
 }
 
+// Создаем Proxy для ленивой инициализации
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
-    return getSupabaseClient()[prop as keyof SupabaseClient]
+    const client = getSupabaseClient()
+    const value = client[prop as keyof SupabaseClient]
+    return typeof value === 'function' ? value.bind(client) : value
   }
 })
 
