@@ -149,30 +149,6 @@ export default function DreamDetailPage({ params }: PageProps) {
     })
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-5rem)]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-morphe-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-mythic-ivory/60">Загрузка сна...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!dream) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-5rem)]">
-        <div className="text-center">
-          <p className="text-mythic-ivory/60 mb-4">Сон не найден</p>
-          <Link href="/journal" className="btn-primary">
-            Вернуться к дневнику
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6 pb-6 animate-fade-in">
       <Header 
