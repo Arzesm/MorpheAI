@@ -184,7 +184,7 @@ export default function NewDreamPage() {
         has_interpretation: !!interpretation,
         interpretation: interpretation || undefined,
         has_image: false,
-        image_url: null
+        image_url: undefined
       }
 
       console.log('📤 Сохранение в Supabase...')
