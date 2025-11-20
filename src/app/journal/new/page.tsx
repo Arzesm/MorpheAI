@@ -93,7 +93,11 @@ export default function NewDreamPage() {
       console.log('Данные:', data.interpretation)
       
       // Создаем чистую копию интерпретации
-      const cleanInterpretation = {
+      const cleanInterpretation: {
+        summary: string
+        symbols: Array<{ name: string; meaning: string }>
+        recommendations: string[]
+      } = {
         summary: data.interpretation?.summary || '',
         symbols: Array.isArray(data.interpretation?.symbols) 
           ? data.interpretation.symbols.map((s: any) => ({
@@ -178,7 +182,7 @@ export default function NewDreamPage() {
         archetype: 'Не определен',
         dream_type: dream.dreamType as 'normal' | 'lucid' | 'nightmare' | 'epic',
         has_interpretation: !!interpretation,
-        interpretation: interpretation,
+        interpretation: interpretation || undefined,
         has_image: false,
         image_url: null
       }
