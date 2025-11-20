@@ -78,7 +78,7 @@ export default function ChatPage() {
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Supabase конфигурация не найдена')
+        throw new Error('Переменные окружения Supabase не настроены. Добавьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_ANON_KEY в настройках Vercel.')
       }
 
       // Формируем историю сообщений для контекста

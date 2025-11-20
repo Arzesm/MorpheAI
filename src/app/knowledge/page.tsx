@@ -167,6 +167,12 @@ export default function KnowledgePage() {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('⚠️ Переменные окружения Supabase не настроены')
+        setArticles([])
+        return
+      }
+      
       const edgeFunctionUrl = `${supabaseUrl}/functions/v1/fetch-sleep-news`
       
       const response = await fetch(edgeFunctionUrl, {
