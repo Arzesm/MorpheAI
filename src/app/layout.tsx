@@ -7,23 +7,24 @@ export const metadata: Metadata = {
   title: 'MorpheAI - Dream Journal & Meditation',
   description: 'Your personal AI-powered dream journal, meditation, and subconscious exploration companion',
   manifest: '/manifest.json',
-  themeColor: '#0A1120',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'MorpheAI',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: 'cover',
-  },
   icons: {
     icon: '/icon-192.png',
     apple: '/icon-192.png',
   },
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover' as const,
+  themeColor: '#0A1120',
 }
 
 export default function RootLayout({
