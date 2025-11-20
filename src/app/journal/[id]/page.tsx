@@ -344,31 +344,39 @@ export default function DreamDetailPage({ params }: PageProps) {
                 src={dream.image_url} 
                 alt={`Визуализация сна: ${dream.title}`}
                 className="w-full h-full object-contain rounded-lg"
-                crossOrigin="anonymous"
+                style={{ display: 'block' }}
                 onError={(e) => {
-                  console.error('❌ Ошибка загрузки изображения:', dream.image_url)
+                  console.error('❌ Ошибка загрузки изображения')
+                  console.error('URL:', dream.image_url)
                   const target = e.target as HTMLImageElement
                   target.style.display = 'none'
                   const parent = target.parentElement
                   if (parent) {
                     parent.innerHTML = `
-                      <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem;">
+                      <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem; background: rgba(10, 17, 32, 0.5);">
                         <div style="text-align: center;">
                           <div style="font-size: 3rem; margin-bottom: 1rem;">🖼️</div>
-                          <p style="color: rgba(242, 237, 227, 0.6); font-size: 0.875rem;">Не удалось загрузить изображение</p>
-                          <p style="color: rgba(242, 237, 227, 0.4); font-size: 0.75rem; margin-top: 0.5rem;">Попробуйте сгенерировать заново</p>
+                          <p style="color: rgba(242, 237, 227, 0.6); font-size: 0.875rem; margin-bottom: 0.5rem;">Не удалось загрузить изображение</p>
+                          <p style="color: rgba(242, 237, 227, 0.4); font-size: 0.75rem;">Изображение могло быть удалено или недоступно</p>
+                          <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(30, 144, 255, 0.2); color: rgba(242, 237, 227, 0.8); border: none; border-radius: 0.5rem; cursor: pointer;">Обновить</button>
                         </div>
                       </div>
                     `
                   }
                 }}
                 onLoad={() => {
-                  console.log('✅ Изображение загружено:', dream.image_url)
+                  console.log('✅ Изображение успешно загружено')
+                  console.log('URL:', dream.image_url)
                 }}
               />
             </div>
             <div className="mt-2 p-3 bg-night-deep-blue/30 rounded-lg">
               <p className="text-mythic-ivory/60 text-xs">Сгенерировано с помощью DALL-E 3</p>
+              {dream.image_url && (
+                <p className="text-mythic-ivory/40 text-xs mt-1 break-all" style={{ wordBreak: 'break-all' }}>
+                  URL: {dream.image_url.substring(0, 60)}...
+                </p>
+              )}
             </div>
           </div>
         ) : (
