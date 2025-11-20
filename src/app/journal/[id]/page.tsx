@@ -338,47 +338,77 @@ export default function DreamDetailPage({ params }: PageProps) {
             </div>
           </div>
         ) : dream.has_image && dream.image_url ? (
-          <div className="relative rounded-lg overflow-hidden bg-night-deep-blue/50">
-            <div className="relative w-full" style={{ minHeight: '400px', maxHeight: '600px' }}>
-              <img 
-                src={dream.image_url} 
-                alt={`Визуализация сна: ${dream.title}`}
-                className="w-full h-full object-contain rounded-lg"
-                style={{ display: 'block' }}
-                onError={(e) => {
-                  console.error('❌ Ошибка загрузки изображения')
-                  console.error('URL:', dream.image_url)
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  const parent = target.parentElement
-                  if (parent) {
-                    parent.innerHTML = `
-                      <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem; background: rgba(10, 17, 32, 0.5);">
-                        <div style="text-align: center;">
-                          <div style="font-size: 3rem; margin-bottom: 1rem;">🖼️</div>
-                          <p style="color: rgba(242, 237, 227, 0.6); font-size: 0.875rem; margin-bottom: 0.5rem;">Не удалось загрузить изображение</p>
-                          <p style="color: rgba(242, 237, 227, 0.4); font-size: 0.75rem;">Изображение могло быть удалено или недоступно</p>
-                          <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(30, 144, 255, 0.2); color: rgba(242, 237, 227, 0.8); border: none; border-radius: 0.5rem; cursor: pointer;">Обновить</button>
-                        </div>
-                      </div>
-                    `
-                  }
-                }}
-                onLoad={() => {
-                  console.log('✅ Изображение успешно загружено')
-                  console.log('URL:', dream.image_url)
-                }}
-              />
-            </div>
-            <div className="mt-2 p-3 bg-night-deep-blue/30 rounded-lg">
-              <p className="text-mythic-ivory/60 text-xs">Сгенерировано с помощью DALL-E 3</p>
-              {dream.image_url && (
-                <p className="text-mythic-ivory/40 text-xs mt-1 break-all" style={{ wordBreak: 'break-all' }}>
-                  URL: {dream.image_url.substring(0, 60)}...
-                </p>
-              )}
-            </div>
-          </div>
+          (() => {
+            // Валидация URL изображения
+            const imageUrl = dream.image_url.trim()
+            const isValidUrl = imageUrl.startsWith('http://') || imageUrl.startsWith('https://')
+            const isImageUrl = imageUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || imageUrl.includes('oaidalleapiprodscus') || imageUrl.includes('dalle')
+            
+            if (!isValidUrl || !isImageUrl) {
+              console.error('❌ Неверный URL изображения:', imageUrl)
+              return (
+                <div className="aspect-video bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-lg flex items-center justify-center border-2 border-dashed border-red-500/30">
+                  <div className="text-center p-6">
+                    <div className="text-6xl mb-4">⚠️</div>
+                    <p className="text-mythic-ivory/80 text-sm mb-2 font-medium">Неверный URL изображения</p>
+                    <p className="text-mythic-ivory/60 text-xs mb-4">URL не указывает на изображение</p>
+                    <button
+                      onClick={() => {
+                        // Удаляем неправильный URL
+                        dreamService.update(id, { has_image: false, image_url: undefined }).then(() => {
+                          loadDream()
+                        })
+                      }}
+                      className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-sm"
+                    >
+                      Сбросить и сгенерировать заново
+                    </button>
+                  </div>
+                </div>
+              )
+            }
+
+            return (
+              <div className="relative rounded-lg overflow-hidden bg-night-deep-blue/50">
+                <div className="relative w-full" style={{ minHeight: '400px', maxHeight: '600px' }}>
+                  <img 
+                    src={imageUrl} 
+                    alt={`Визуализация сна: ${dream.title}`}
+                    className="w-full h-full object-contain rounded-lg"
+                    style={{ display: 'block' }}
+                    loading="lazy"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      console.error('❌ Ошибка загрузки изображения')
+                      console.error('URL:', imageUrl)
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        parent.innerHTML = `
+                          <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 2rem; background: rgba(10, 17, 32, 0.5); border-radius: 0.5rem;">
+                            <div style="text-align: center;">
+                              <div style="font-size: 3rem; margin-bottom: 1rem;">🖼️</div>
+                              <p style="color: rgba(242, 237, 227, 0.6); font-size: 0.875rem; margin-bottom: 0.5rem;">Не удалось загрузить изображение</p>
+                              <p style="color: rgba(242, 237, 227, 0.4); font-size: 0.75rem; margin-bottom: 1rem;">Изображение могло быть удалено или недоступно</p>
+                              <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(30, 144, 255, 0.2); color: rgba(242, 237, 227, 0.8); border: none; border-radius: 0.5rem; cursor: pointer;">Обновить</button>
+                            </div>
+                          </div>
+                        `
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Изображение успешно загружено')
+                      console.log('URL:', imageUrl)
+                    }}
+                  />
+                </div>
+                <div className="mt-2 p-3 bg-night-deep-blue/30 rounded-lg">
+                  <p className="text-mythic-ivory/60 text-xs">Сгенерировано с помощью DALL-E 3</p>
+                </div>
+              </div>
+            )
+          })()
         ) : (
           <div className="aspect-video bg-gradient-to-br from-morphe-blue/20 to-amethyst-spirit/20 rounded-lg flex items-center justify-center border-2 border-dashed border-mythic-ivory/10">
             <div className="text-center p-6">
