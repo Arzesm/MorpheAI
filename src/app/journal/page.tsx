@@ -239,67 +239,68 @@ function JournalContent() {
 
         {/* Action buttons */}
         <div className="flex items-center space-x-2 gap-2">
-        {/* Export/Import buttons */}
-        <div className="relative group">
-          <button
-            onClick={() => handleExport('json')}
-            disabled={isExporting || dreams.length === 0}
-            className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
-            title="Экспорт"
-          >
-            <Download size={16} />
-            {isExporting ? '...' : ''}
-          </button>
-          
-          {/* Export dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-48 bg-night-deep-blue border border-mythic-ivory/20 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-            <div className="p-2 space-y-1">
-              <button
-                onClick={() => handleExport('json')}
-                className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
-              >
-                📄 JSON
-              </button>
-              <button
-                onClick={() => handleExport('text')}
-                className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
-              >
-                📝 Текст
-              </button>
-              <button
-                onClick={() => handleExport('csv')}
-                className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
-              >
-                📊 CSV
-              </button>
+          {/* Export/Import buttons */}
+          <div className="relative group">
+            <button
+              onClick={() => handleExport('json')}
+              disabled={isExporting || dreams.length === 0}
+              className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
+              title="Экспорт"
+            >
+              <Download size={16} />
+              {isExporting ? '...' : ''}
+            </button>
+            
+            {/* Export dropdown */}
+            <div className="absolute right-0 top-full mt-2 w-48 bg-night-deep-blue border border-mythic-ivory/20 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="p-2 space-y-1">
+                <button
+                  onClick={() => handleExport('json')}
+                  className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
+                >
+                  📄 JSON
+                </button>
+                <button
+                  onClick={() => handleExport('text')}
+                  className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
+                >
+                  📝 Текст
+                </button>
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
+                >
+                  📊 CSV
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isImporting}
-          className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
-          title="Импорт"
-        >
-          <Upload size={16} />
-          {isImporting ? '...' : ''}
-        </button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json,.txt,.csv,text/*"
-          onChange={handleImport}
-          className="hidden"
-        />
-
-        <Link href="/journal/new">
-          <button className="btn-primary flex items-center space-x-2 shadow-xl">
-            <Plus size={20} />
-            <span className="hidden sm:inline">Записать</span>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+            className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
+            title="Импорт"
+          >
+            <Upload size={16} />
+            {isImporting ? '...' : ''}
           </button>
-        </Link>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,.txt,.csv,text/*"
+            onChange={handleImport}
+            className="hidden"
+          />
+
+          <Link href="/journal/new">
+            <button className="btn-primary flex items-center space-x-2 shadow-xl">
+              <Plus size={20} />
+              <span className="hidden sm:inline">Записать</span>
+            </button>
+          </Link>
+        </div>
       </div>
 
       <div>
