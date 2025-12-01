@@ -44,7 +44,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
       case 'epic':
         return (
           <span className="px-2 py-1 bg-yellow-500/30 text-yellow-400 text-xs rounded-full flex items-center space-x-1">
-            <span>🌟</span>
+            <span className="text-3xl">⭐</span>
             <span>Эпический</span>
           </span>
         )
