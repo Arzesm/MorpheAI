@@ -116,7 +116,7 @@ export default function DreamCalendar() {
     switch (type) {
       case 'lucid': return '✨'
       case 'nightmare': return '😱'
-      case 'epic': return '🌟'
+      case 'epic': return '⭐'
       default: return '💭'
     }
   }
@@ -269,7 +269,7 @@ export default function DreamCalendar() {
                   >
                     <div className="card p-4 hover:scale-[1.02] transition-all cursor-pointer group">
                       <div className="flex items-start space-x-3">
-                        <div className="text-3xl">
+                        <div className="text-3xl transform transition-transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
                           {getDreamTypeEmoji(dream.dream_type)}
                         </div>
                         <div className="flex-1 min-w-0">
