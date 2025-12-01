@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Calendar, Image, Sparkles, Trash2 } from 'lucide-react'
 import { dreamService } from '@/lib/supabase'
+import { getEmojiFromTags, getEmojiFromContent } from '@/lib/emojiMapper'
 
 interface DreamCardProps {
   dream: {
