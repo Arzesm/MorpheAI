@@ -104,8 +104,8 @@ export default function SleepTips() {
           >
             <div className="relative">
               <div className="absolute inset-0 bg-light-ai-blue/30 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative text-4xl p-3 bg-gradient-to-br from-mythic-ivory/10 to-mythic-ivory/20 rounded-xl backdrop-blur-sm transform transition-transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
-                {tip.icon}
+              <div className="relative text-3xl p-3 bg-gradient-to-br from-mythic-ivory/10 to-mythic-ivory/20 rounded-xl backdrop-blur-sm transform transition-transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
+                <span className="text-3xl">{tip.icon}</span>
               </div>
             </div>
             <div className="flex-1">

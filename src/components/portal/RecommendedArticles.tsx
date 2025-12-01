@@ -47,7 +47,7 @@ export default function RecommendedArticles() {
             <div className="card-glass p-4 hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-between group">
               <div className="flex items-center space-x-3 gap-3 flex-1">
                 <div className="text-3xl p-2 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-xl backdrop-blur-sm">
-                  {article.icon}
+                  <span className="text-3xl">{article.icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-mythic-ivory font-semibold text-sm truncate mb-1">
