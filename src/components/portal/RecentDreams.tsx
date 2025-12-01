@@ -75,7 +75,7 @@ export default function RecentDreams() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4 gap-4">
+        <div className="space-y-4">
           {recentDreams.map((dream) => {
             // Извлекаем чистый текст из HTML для preview
             const cleanText = dream.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
