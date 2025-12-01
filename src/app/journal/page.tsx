@@ -147,11 +147,18 @@ function JournalContent() {
 
     setIsImporting(true)
     try {
+      console.log('📥 Начало импорта файла:', file.name, file.type)
+      
       const text = await file.text()
+      console.log('📄 Размер файла:', text.length, 'символов')
+      console.log('📄 Первые 200 символов:', text.substring(0, 200))
+      
       const importedDreams = importDreams(text, file.name)
+      console.log('✅ Распознано снов:', importedDreams.length)
+      console.log('📋 Примеры:', importedDreams.slice(0, 2))
       
       if (importedDreams.length === 0) {
-        alert('Не удалось распознать сны в файле. Проверьте формат файла.')
+        alert('Не удалось распознать сны в файле.\n\nПроверьте формат файла. Поддерживаются:\n- JSON\n- Текст (с разделителями)\n- CSV\n\nУбедитесь, что файл содержит данные о снах.')
         setIsImporting(false)
         return
       }
@@ -184,8 +191,8 @@ function JournalContent() {
 
       alert(`Импорт завершен!\nУспешно: ${successCount}\nОшибок: ${errorCount}`)
     } catch (error) {
-      console.error('Ошибка импорта:', error)
-      alert(`Ошибка при импорте: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
+      console.error('❌ Ошибка импорта:', error)
+      alert(`Ошибка при импорте: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}\n\nПроверьте консоль браузера (F12) для деталей.`)
     } finally {
       setIsImporting(false)
       // Сбрасываем input
@@ -289,7 +296,7 @@ function JournalContent() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".json,.txt,.csv,text/*"
+            accept=".json,.txt,.csv,text/plain,text/csv,application/json"
             onChange={handleImport}
             className="hidden"
           />

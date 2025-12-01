@@ -58,24 +58,29 @@ function parseJSON(content: string): ImportedDream[] {
 function parseText(content: string): ImportedDream[] {
   const dreams: ImportedDream[] = []
   
-  // Разделяем по разделителям
-  const sections = content.split(/(?:={60,}|-{60,}|\n\n\n+)/)
+  if (!content || content.trim().length === 0) {
+    return dreams
+  }
+  
+  // Разделяем по разделителям (более гибко)
+  const sections = content.split(/(?:={60,}|-{60,}|\n\n\n+|\n{2,}(?=СОН|Заголовок|Title|Дата|Date))/i)
   
   let currentDream: Partial<ImportedDream> | null = null
+  let inContentSection = false
   
   for (const section of sections) {
-    const lines = section.trim().split('\n')
-    if (lines.length < 2) continue
+    const lines = section.trim().split('\n').filter(l => l.trim().length > 0)
+    if (lines.length === 0) continue
     
     // Проверяем, начинается ли секция с "СОН" или содержит заголовок
-    const isDreamStart = /СОН\s*#?\d+|Заголовок:|Title:/i.test(section)
+    const isDreamStart = /СОН\s*#?\d+|Заголовок:|Title:|^[А-ЯЁA-Z][^:]{0,50}$/i.test(section.trim().split('\n')[0])
     
-    if (isDreamStart || (!currentDream && lines.length > 3)) {
+    if (isDreamStart || (!currentDream && lines.length > 2)) {
       // Сохраняем предыдущий сон
       if (currentDream && currentDream.title && currentDream.content) {
         dreams.push({
           title: currentDream.title,
-          content: currentDream.content,
+          content: currentDream.content.trim(),
           date: currentDream.date || new Date().toISOString().split('T')[0],
           emotion: currentDream.emotion,
           emotion_emoji: currentDream.emotion_emoji,
@@ -87,19 +92,25 @@ function parseText(content: string): ImportedDream[] {
       
       // Начинаем новый сон
       currentDream = {}
+      inContentSection = false
     }
     
     // Парсим поля
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
       const trimmed = line.trim()
+      
+      if (!trimmed) continue
       
       if (/Заголовок:|Title:/i.test(trimmed)) {
         currentDream!.title = trimmed.replace(/Заголовок:|Title:/i, '').trim()
+        inContentSection = false
       } else if (/Дата:|Date:/i.test(trimmed)) {
         const dateMatch = trimmed.match(/(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/)
         if (dateMatch) {
           currentDream!.date = normalizeDate(dateMatch[1])
         }
+        inContentSection = false
       } else if (/Эмоция:|Emotion:/i.test(trimmed)) {
         const emotionMatch = trimmed.match(/Эмоция:|Emotion:\s*(.+)/i)
         if (emotionMatch) {
@@ -112,6 +123,7 @@ function parseText(content: string): ImportedDream[] {
             currentDream!.emotion = emotionText
           }
         }
+        inContentSection = false
       } else if (/Тип:|Type:/i.test(trimmed)) {
         const typeMatch = trimmed.match(/Тип:|Type:\s*(.+)/i)
         if (typeMatch) {
@@ -126,23 +138,38 @@ function parseText(content: string): ImportedDream[] {
             currentDream!.dream_type = 'normal'
           }
         }
+        inContentSection = false
       } else if (/Теги:|Tags:/i.test(trimmed)) {
         const tagsMatch = trimmed.match(/Теги:|Tags:\s*(.+)/i)
         if (tagsMatch) {
           const tagsText = tagsMatch[1]
           currentDream!.tags = tagsText.split(/[,#;]/).map(t => t.trim().replace(/^#/, '')).filter(Boolean)
         }
+        inContentSection = false
       } else if (/Содержание:|Content:|Текст:|Text:/i.test(trimmed)) {
         // Следующие строки - это содержание
-        const contentIndex = lines.indexOf(line)
+        inContentSection = true
+        const contentIndex = i
         currentDream!.content = lines.slice(contentIndex + 1).join('\n').trim()
-      } else if (trimmed && !currentDream!.content && trimmed.length > 10) {
-        // Если нет явного заголовка "Содержание", но есть длинный текст - это содержание
-        if (!currentDream!.title) {
-          currentDream!.title = trimmed.substring(0, 50)
-          currentDream!.content = trimmed
-        } else {
-          currentDream!.content = (currentDream!.content || '') + '\n' + trimmed
+        break
+      } else {
+        // Если это не метаданные, то это содержание
+        if (!currentDream!.title && trimmed.length > 5 && trimmed.length < 100 && !trimmed.includes(':')) {
+          // Первая строка без двоеточия - вероятно заголовок
+          currentDream!.title = trimmed
+          inContentSection = false
+        } else if (inContentSection || (!currentDream!.title && trimmed.length > 10)) {
+          // Добавляем к содержанию
+          if (currentDream!.content) {
+            currentDream!.content += '\n' + trimmed
+          } else {
+            currentDream!.content = trimmed
+          }
+          inContentSection = true
+        } else if (trimmed.length > 10) {
+          // Длинный текст без меток - это содержание
+          currentDream!.content = (currentDream!.content || '') + (currentDream!.content ? '\n' : '') + trimmed
+          inContentSection = true
         }
       }
     }
@@ -152,7 +179,7 @@ function parseText(content: string): ImportedDream[] {
   if (currentDream && currentDream.title && currentDream.content) {
     dreams.push({
       title: currentDream.title,
-      content: currentDream.content,
+      content: currentDream.content.trim(),
       date: currentDream.date || new Date().toISOString().split('T')[0],
       emotion: currentDream.emotion,
       emotion_emoji: currentDream.emotion_emoji,
@@ -164,16 +191,40 @@ function parseText(content: string): ImportedDream[] {
   
   // Если не удалось распарсить структурированно, пробуем разделить по пустым строкам
   if (dreams.length === 0) {
+    // Разделяем по двойным переносам строк или по строкам, начинающимся с заглавной буквы
     const blocks = content.split(/\n\n\n+|\n{3,}/)
+    
+    // Если блоков мало, пробуем разделить по двойным переносам
+    if (blocks.length < 2) {
+      const doubleNewlineBlocks = content.split(/\n\n+/)
+      if (doubleNewlineBlocks.length > 1) {
+        blocks.push(...doubleNewlineBlocks)
+      }
+    }
+    
     for (const block of blocks) {
       const lines = block.trim().split('\n').filter(l => l.trim().length > 0)
-      if (lines.length >= 2) {
-        const title = lines[0].substring(0, 100)
-        const content = lines.slice(1).join('\n')
-        if (content.length > 10) {
+      if (lines.length >= 1) {
+        const firstLine = lines[0].trim()
+        const restLines = lines.slice(1)
+        
+        // Если первая строка короткая и остальные есть - это заголовок и содержание
+        if (firstLine.length < 100 && restLines.length > 0) {
+          const title = firstLine
+          const content = restLines.join('\n')
+          if (content.length > 10) {
+            dreams.push({
+              title,
+              content,
+              date: new Date().toISOString().split('T')[0],
+              dream_type: 'normal'
+            })
+          }
+        } else if (firstLine.length > 20) {
+          // Если только одна длинная строка - это весь сон
           dreams.push({
-            title,
-            content,
+            title: firstLine.substring(0, 50),
+            content: firstLine,
             date: new Date().toISOString().split('T')[0],
             dream_type: 'normal'
           })
@@ -301,20 +352,39 @@ function normalizeDate(dateStr: string): string {
  */
 export function importDreams(fileContent: string, filename: string): ImportedDream[] {
   const lowerFilename = filename.toLowerCase()
+  const trimmedContent = fileContent.trim()
   
   try {
-    // JSON формат
-    if (lowerFilename.endsWith('.json') || fileContent.trim().startsWith('{') || fileContent.trim().startsWith('[')) {
-      return parseJSON(fileContent)
+    // JSON формат - проверяем первым, так как он самый строгий
+    if (lowerFilename.endsWith('.json') || trimmedContent.startsWith('{') || trimmedContent.startsWith('[')) {
+      try {
+        return parseJSON(fileContent)
+      } catch (e) {
+        // Если JSON не парсится, пробуем другие форматы
+        console.log('JSON parsing failed, trying other formats')
+      }
     }
     
-    // CSV формат
-    if (lowerFilename.endsWith('.csv') || fileContent.includes(',') && fileContent.split('\n').length > 1) {
-      return parseCSV(fileContent)
+    // CSV формат - проверяем наличие запятых и структуру
+    if (lowerFilename.endsWith('.csv') || (fileContent.includes(',') && fileContent.split('\n').length > 1 && fileContent.split(',').length > 3)) {
+      try {
+        const csvResult = parseCSV(fileContent)
+        if (csvResult.length > 0) {
+          return csvResult
+        }
+      } catch (e) {
+        console.log('CSV parsing failed, trying text format')
+      }
     }
     
-    // Текстовый формат (по умолчанию)
-    return parseText(fileContent)
+    // Текстовый формат (по умолчанию) - самый гибкий
+    const textResult = parseText(fileContent)
+    if (textResult.length > 0) {
+      return textResult
+    }
+    
+    // Если ничего не распознано, пробуем разбить по пустым строкам
+    throw new Error('Не удалось распознать формат файла. Убедитесь, что файл содержит данные о снах.')
   } catch (error) {
     throw new Error(`Ошибка импорта: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
   }
