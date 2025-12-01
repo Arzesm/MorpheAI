@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { Plus, Search, Filter, X } from 'lucide-react'
+import { useState, useEffect, Suspense, useRef } from 'react'
+import { Plus, Search, Filter, X, Download, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import DreamCard from '@/components/journal/DreamCard'
 import FilterModal from '@/components/journal/FilterModal'
-import { dreamService } from '@/lib/supabase'
+import { dreamService, Dream } from '@/lib/supabase'
+import { invalidateDreamsCache } from '@/hooks/useDreams'
+import { exportDreamsToJSON, exportDreamsToText, exportDreamsToCSV, downloadFile } from '@/lib/dreamExport'
+import { importDreams, convertImportedDreams } from '@/lib/dreamImport'
 
 function JournalContent() {
   const router = useRouter()
@@ -18,11 +21,14 @@ function JournalContent() {
   
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
-  const [dreams, setDreams] = useState<any[]>([])
+  const [dreams, setDreams] = useState<Dream[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [activeType, setActiveType] = useState<string | null>(null)
   const [showAnxious, setShowAnxious] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Загрузка снов из Supabase при монтировании
   useEffect(() => {
@@ -219,12 +225,69 @@ function JournalContent() {
     <div className="space-y-5 pb-6 animate-fade-in">
       <Header 
         rightElement={
-          <Link href="/journal/new">
-            <button className="btn-primary flex items-center space-x-2 shadow-xl">
-              <Plus size={20} />
-              <span className="hidden sm:inline">Записать</span>
+          <div className="flex items-center space-x-2 gap-2">
+            {/* Export/Import buttons */}
+            <div className="relative group">
+              <button
+                onClick={() => handleExport('json')}
+                disabled={isExporting || dreams.length === 0}
+                className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
+                title="Экспорт"
+              >
+                <Download size={16} />
+                {isExporting ? '...' : ''}
+              </button>
+              
+              {/* Export dropdown */}
+              <div className="absolute right-0 top-full mt-2 w-48 bg-night-deep-blue border border-mythic-ivory/20 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <div className="p-2 space-y-1">
+                  <button
+                    onClick={() => handleExport('json')}
+                    className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
+                  >
+                    📄 JSON
+                  </button>
+                  <button
+                    onClick={() => handleExport('text')}
+                    className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
+                  >
+                    📝 Текст
+                  </button>
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
+                  >
+                    📊 CSV
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
+              title="Импорт"
+            >
+              <Upload size={16} />
+              {isImporting ? '...' : ''}
             </button>
-          </Link>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,.txt,.csv,text/*"
+              onChange={handleImport}
+              className="hidden"
+            />
+
+            <Link href="/journal/new">
+              <button className="btn-primary flex items-center space-x-2 shadow-xl">
+                <Plus size={20} />
+                <span className="hidden sm:inline">Записать</span>
+              </button>
+            </Link>
+          </div>
         }
       />
 
