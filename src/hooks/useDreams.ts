@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { dreamService, Dream, supabase } from '@/lib/supabase'
+import { dreamService, Dream } from '@/lib/supabase'
 
 // Глобальный кэш для снов (в памяти)
 let dreamsCache: Dream[] | null = null
@@ -85,16 +85,27 @@ export function useDreamsLight() {
     const loadDreams = async () => {
       setIsLoading(true)
       try {
-        // Загружаем только нужные поля для статистики и календаря (без content)
-        const { data, error } = await supabase
-          .from('dreams')
-          .select('id, title, date, emotion, emotion_emoji, dream_type, tags, archetype, created_at')
-          .order('date', { ascending: false })
+        // Используем dreamService для совместимости
+        const allDreams = await dreamService.getAll()
         
-        if (error) throw error
-        
-        if (data) {
-          setDreams(data as Dream[])
+        if (allDreams) {
+          // Оставляем только нужные поля (убираем content для экономии памяти)
+          const lightDreams = allDreams.map(({ id, title, date, emotion, emotion_emoji, dream_type, tags, archetype, created_at }) => ({
+            id,
+            title,
+            date,
+            emotion,
+            emotion_emoji,
+            dream_type,
+            tags,
+            archetype,
+            created_at,
+            content: '', // Пустой content для совместимости с типом
+            has_interpretation: false,
+            has_image: false
+          })) as Dream[]
+          
+          setDreams(lightDreams)
         } else {
           setDreams([])
         }
