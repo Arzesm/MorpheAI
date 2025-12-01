@@ -220,6 +220,23 @@ function JournalContent() {
         </div>
       )}
 
+      {/* Debug info (development only) */}
+      {process.env.NODE_ENV === 'development' && !isLoading && (
+        <div className="mb-4 p-3 bg-mythic-ivory/5 rounded-lg text-xs text-mythic-ivory/60 space-y-1">
+          <p>🔍 Debug: Всего снов в базе: <strong>{dreams.length}</strong></p>
+          <p>🔍 Debug: Отфильтровано: <strong>{filteredDreams.length}</strong></p>
+          <button 
+            onClick={() => {
+              console.log('🔄 Принудительная перезагрузка снов...')
+              loadDreams()
+            }}
+            className="mt-2 text-morphe-blue hover:text-light-ai-blue underline"
+          >
+            🔄 Перезагрузить сны
+          </button>
+        </div>
+      )}
+
       {/* Dreams List */}
       {!isLoading && filteredDreams.length > 0 && (
         <div className="space-y-4">
