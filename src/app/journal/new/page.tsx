@@ -334,7 +334,7 @@ export default function NewDreamPage() {
                     : 'bg-mythic-ivory/10 text-mythic-ivory/60'
                 }`}
               >
-                <span className="text-3xl">{emotion.emoji}</span>
+                <span>{emotion.emoji}</span>
                 <span>{emotion.name}</span>
               </button>
             ))}

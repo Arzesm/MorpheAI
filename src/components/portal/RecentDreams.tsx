@@ -121,7 +121,7 @@ export default function RecentDreams() {
                           {formatDate(dream.date)}
                         </span>
                         <span className="flex items-center">
-                          <span className="text-3xl">{dream.emotion_emoji}</span> <span className="ml-1">{dream.emotion}</span>
+                          {dream.emotion_emoji} <span className="ml-1">{dream.emotion}</span>
                         </span>
                       </div>
                       

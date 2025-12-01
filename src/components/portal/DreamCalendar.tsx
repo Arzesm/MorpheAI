@@ -280,8 +280,8 @@ export default function DreamCalendar() {
                             {preview}
                           </p>
                           <div className="flex items-center space-x-2 text-xs">
-                            <span className="text-mythic-ivory/50 flex items-center">
-                              <span className="text-3xl">{dream.emotion_emoji}</span> <span className="ml-1">{dream.emotion}</span>
+                            <span className="text-mythic-ivory/50">
+                              {dream.emotion_emoji} {dream.emotion}
                             </span>
                             {dream.tags.length > 0 && (
                               <span className="text-light-ai-blue">
