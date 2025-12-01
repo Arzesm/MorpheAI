@@ -1,57 +1,39 @@
 'use client'
 
 import { Calendar, Loader2, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { dreamService, Dream } from '@/lib/supabase'
+import { useDreamsLight } from '@/hooks/useDreams'
+import { Dream } from '@/lib/supabase'
 
 export default function DreamCalendar() {
   const router = useRouter()
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [dreams, setDreams] = useState<Dream[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [dreamsByDate, setDreamsByDate] = useState<Record<number, Dream[]>>({})
+  const { dreams: allDreams, isLoading } = useDreamsLight()
   const [selectedDayDreams, setSelectedDayDreams] = useState<Dream[] | null>(null)
   const [showModal, setShowModal] = useState(false)
   
-  // Загрузка снов из Supabase
-  useEffect(() => {
-    const loadDreams = async () => {
-      setIsLoading(true)
-      try {
-        const allDreams = await dreamService.getAll()
-        if (allDreams) {
-          setDreams(allDreams)
-          
-          // Группируем сны по дням текущего месяца
-          const dreamsByDay: Record<number, Dream[]> = {}
-          allDreams.forEach((dream) => {
-            const dreamDate = new Date(dream.date)
-            if (
-              dreamDate.getMonth() === currentMonth.getMonth() &&
-              dreamDate.getFullYear() === currentMonth.getFullYear()
-            ) {
-              const day = dreamDate.getDate()
-              if (!dreamsByDay[day]) {
-                dreamsByDay[day] = []
-              }
-              dreamsByDay[day].push(dream)
-            }
-          })
-          setDreamsByDate(dreamsByDay)
-          console.log('📅 Загружено снов для календаря:', allDreams.length)
-          console.log('📅 Сны по датам:', dreamsByDay)
-        }
-      } catch (error) {
-        console.error('❌ Ошибка загрузки снов для календаря:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  // Группируем сны по дням текущего месяца (мемоизация)
+  const dreamsByDate = useMemo(() => {
+    if (!allDreams || allDreams.length === 0) return {}
     
-    loadDreams()
-  }, [currentMonth])
+    const dreamsByDay: Record<number, Dream[]> = {}
+    allDreams.forEach((dream) => {
+      const dreamDate = new Date(dream.date)
+      if (
+        dreamDate.getMonth() === currentMonth.getMonth() &&
+        dreamDate.getFullYear() === currentMonth.getFullYear()
+      ) {
+        const day = dreamDate.getDate()
+        if (!dreamsByDay[day]) {
+          dreamsByDay[day] = []
+        }
+        dreamsByDay[day].push(dream)
+      }
+    })
+    return dreamsByDay
+  }, [allDreams, currentMonth])
   
   // Навигация по месяцам
   const goToPreviousMonth = () => {

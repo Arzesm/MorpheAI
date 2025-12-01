@@ -106,3 +106,4 @@ $env:SUPABASE_SERVICE_ROLE_KEY = "ваш-service-role-key-здесь"
 - `setup-storage.sql` - SQL скрипт для создания bucket и политик
 - `AUTO_SETUP_STORAGE.md` - эта инструкция
 
+

@@ -33,3 +33,4 @@ Write-Host "3. Add SUPABASE_SERVICE_ROLE_KEY to Edge Functions secrets" -Foregro
 Write-Host "4. Redeploy generate-dream-image function" -ForegroundColor White
 Write-Host ""
 
+

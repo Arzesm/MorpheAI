@@ -50,3 +50,4 @@ SELECT
 FROM storage.buckets 
 WHERE id = 'dream-images';
 
+

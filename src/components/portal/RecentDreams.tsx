@@ -2,35 +2,20 @@
 
 import { BookOpen, Calendar, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { dreamService, Dream } from '@/lib/supabase'
+import { useMemo } from 'react'
+import { useDreams } from '@/hooks/useDreams'
 
 export default function RecentDreams() {
-  const [recentDreams, setRecentDreams] = useState<Dream[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const loadRecentDreams = async () => {
-      setIsLoading(true)
-      try {
-        const allDreams = await dreamService.getAll()
-        if (allDreams) {
-          // Сортируем по дате (новые сверху) и берём последние 3
-          const sorted = [...allDreams].sort((a, b) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-          )
-          setRecentDreams(sorted.slice(0, 3))
-          console.log('📖 Загружено последних снов:', sorted.slice(0, 3).length)
-        }
-      } catch (error) {
-        console.error('❌ Ошибка загрузки последних снов:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadRecentDreams()
-  }, [])
+  const { dreams: allDreams, isLoading } = useDreams()
+  
+  // Сортируем по дате (новые сверху) и берём последние 3
+  const recentDreams = useMemo(() => {
+    if (!allDreams || allDreams.length === 0) return []
+    const sorted = [...allDreams].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+    return sorted.slice(0, 3)
+  }, [allDreams])
 
   const getEmojiForContent = (content: string) => {
     const lowerContent = content.toLowerCase()

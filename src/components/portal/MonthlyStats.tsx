@@ -1,30 +1,90 @@
 'use client'
 
 import { TrendingUp, Moon, AlertCircle, Smile, Loader2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { dreamService, Dream } from '@/lib/supabase'
+import { useDreamsLight } from '@/hooks/useDreams'
+import { Dream } from '@/lib/supabase'
 
 export default function MonthlyStats() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [stats, setStats] = useState({
-    totalDreams: 0,
-    lucidDreams: 0,
-    anxiousDreams: 0,
-    emotionIndex: 0
-  })
-  const [prevStats, setPrevStats] = useState({
-    totalDreams: 0,
-    lucidDreams: 0,
-    anxiousDreams: 0,
-    emotionIndex: 0
-  })
+  const { dreams: allDreams, isLoading } = useDreamsLight()
+  
+  // Вычисляем статистику из загруженных снов
+  const { currentStats, prevStats } = (() => {
+    if (!allDreams || allDreams.length === 0) {
+      return {
+        currentStats: {
+          totalDreams: 0,
+          lucidDreams: 0,
+          anxiousDreams: 0,
+          emotionIndex: 0
+        },
+        prevStats: {
+          totalDreams: 0,
+          lucidDreams: 0,
+          anxiousDreams: 0,
+          emotionIndex: 0
+        }
+      }
+    }
 
-  useEffect(() => {
-    const loadStats = async () => {
-      setIsLoading(true)
-      try {
-        const allDreams = await dreamService.getAll()
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+
+    // Предыдущий месяц
+    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1
+    const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear
+
+    // Фильтруем сны текущего месяца
+    const currentMonthDreams = allDreams.filter((dream) => {
+      const dreamDate = new Date(dream.date)
+      return (
+        dreamDate.getMonth() === currentMonth &&
+        dreamDate.getFullYear() === currentYear
+      )
+    })
+
+    // Фильтруем сны предыдущего месяца
+    const prevMonthDreams = allDreams.filter((dream) => {
+      const dreamDate = new Date(dream.date)
+      return (
+        dreamDate.getMonth() === prevMonth &&
+        dreamDate.getFullYear() === prevYear
+      )
+    })
+
+    const emotionScores: Record<string, number> = {
+      'Радость': 10,
+      'Спокойствие': 9,
+      'Удивление': 7,
+      'Ностальгия': 6,
+      'Грусть': 4,
+      'Тревога': 3,
+      'Страх': 2
+    }
+
+    // Функция для расчета статистики
+    const calculateStats = (dreams: Dream[]) => {
+      const totalDreams = dreams.length
+      const lucidDreams = dreams.filter((d) => d.dream_type === 'lucid').length
+      const anxiousDreams = dreams.filter((d) => 
+        d.emotion === 'Тревога' || d.emotion === 'Страх' || d.dream_type === 'nightmare'
+      ).length
+
+      const totalScore = dreams.reduce((sum, dream) => {
+        return sum + (emotionScores[dream.emotion] || 5)
+      }, 0)
+      
+      const emotionIndex = totalDreams > 0 ? parseFloat((totalScore / totalDreams).toFixed(1)) : 0
+
+      return { totalDreams, lucidDreams, anxiousDreams, emotionIndex }
+    }
+
+    const currentStats = calculateStats(currentMonthDreams)
+    const previousStats = calculateStats(prevMonthDreams)
+
+    return { currentStats, prevStats: previousStats }
+  })()
         if (allDreams) {
           const now = new Date()
           const currentMonth = now.getMonth()
@@ -79,26 +139,6 @@ export default function MonthlyStats() {
             return { totalDreams, lucidDreams, anxiousDreams, emotionIndex }
           }
 
-          const currentStats = calculateStats(currentMonthDreams)
-          const previousStats = calculateStats(prevMonthDreams)
-
-          setStats(currentStats)
-          setPrevStats(previousStats)
-
-          console.log('📊 Статистика загружена:', {
-            current: currentStats,
-            previous: previousStats
-          })
-        }
-      } catch (error) {
-        console.error('❌ Ошибка загрузки статистики:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadStats()
-  }, [])
 
   const getChange = (current: number, previous: number) => {
     const diff = current - previous
@@ -114,8 +154,8 @@ export default function MonthlyStats() {
     {
       icon: Moon,
       label: 'Снов записано',
-      value: stats.totalDreams.toString(),
-      change: getChange(stats.totalDreams, prevStats.totalDreams),
+      value: currentStats.totalDreams.toString(),
+      change: getChange(currentStats.totalDreams, prevStats.totalDreams),
       color: 'text-morphe-blue',
       gradient: 'from-morphe-blue/20 to-morphe-blue/5',
       link: '/journal'
@@ -123,8 +163,8 @@ export default function MonthlyStats() {
     {
       icon: Sparkles,
       label: 'Осознанных',
-      value: stats.lucidDreams.toString(),
-      change: getChange(stats.lucidDreams, prevStats.lucidDreams),
+      value: currentStats.lucidDreams.toString(),
+      change: getChange(currentStats.lucidDreams, prevStats.lucidDreams),
       color: 'text-amethyst-spirit',
       gradient: 'from-amethyst-spirit/20 to-amethyst-spirit/5',
       link: '/journal?type=lucid'
@@ -132,8 +172,8 @@ export default function MonthlyStats() {
     {
       icon: AlertCircle,
       label: 'Тревожных',
-      value: stats.anxiousDreams.toString(),
-      change: getChange(stats.anxiousDreams, prevStats.anxiousDreams),
+      value: currentStats.anxiousDreams.toString(),
+      change: getChange(currentStats.anxiousDreams, prevStats.anxiousDreams),
       color: 'text-light-ai-blue',
       gradient: 'from-light-ai-blue/20 to-light-ai-blue/5',
       link: '/journal?anxious=true',
@@ -142,8 +182,8 @@ export default function MonthlyStats() {
     {
       icon: Smile,
       label: 'Индекс эмоций',
-      value: stats.emotionIndex.toFixed(1),
-      change: getChange(stats.emotionIndex, prevStats.emotionIndex),
+      value: currentStats.emotionIndex.toFixed(1),
+      change: getChange(currentStats.emotionIndex, prevStats.emotionIndex),
       color: 'text-mythic-ivory',
       gradient: 'from-mythic-ivory/10 to-mythic-ivory/5',
       link: null

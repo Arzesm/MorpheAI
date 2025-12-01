@@ -136,3 +136,4 @@ Write-Host ""
 Write-Host "SQL скрипт: setup-storage.sql" -ForegroundColor Yellow
 Write-Host ""
 
+
