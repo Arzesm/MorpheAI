@@ -61,8 +61,8 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
     // Простая логика выбора эмодзи на основе контента
     const lowerContent = content.toLowerCase()
     if (lowerContent.includes('полёт') || lowerContent.includes('лет')) return '✨'
-    if (lowerContent.includes('дом')) return '🏠'
-    if (lowerContent.includes('лес')) return '🌲'
+    if (lowerContent.includes('дом')) return '🏘️'
+    if (lowerContent.includes('лес')) return '🌳'
     if (lowerContent.includes('темнота') || lowerContent.includes('преследова')) return '🌑'
     if (lowerContent.includes('вода') || lowerContent.includes('море')) return '🌊'
     if (lowerContent.includes('город')) return '🏙️'
