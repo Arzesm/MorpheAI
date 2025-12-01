@@ -41,7 +41,7 @@ export default function RecommendedArticles() {
         </Link>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4 gap-4">
         {articles.map((article) => (
           <Link key={article.id} href={`/knowledge/${article.id}`}>
             <div className="card-glass p-4 hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-between group">
