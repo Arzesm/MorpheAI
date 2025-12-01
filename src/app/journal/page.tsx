@@ -48,11 +48,14 @@ function JournalContent() {
   async function loadDreams() {
     try {
       setIsLoading(true)
+      console.log('🔄 Загрузка снов из Supabase...')
+      
       const data = await dreamService.getAll()
       
       console.log('📚 Загружено снов из Supabase:', data?.length || 0)
+      console.log('📚 Данные:', data)
       
-      if (data) {
+      if (data && data.length > 0) {
         // Сортируем сны: новые сверху (по created_at в порядке убывания)
         const sortedDreams = [...data].sort((a, b) => {
           const dateA = new Date(a.created_at || a.date || 0).getTime()
@@ -61,16 +64,22 @@ function JournalContent() {
         })
         
         setDreams(sortedDreams)
-        console.log('✅ Сны отсортированы: новые сверху')
+        console.log('✅ Сны отсортированы: новые сверху', sortedDreams.length)
       } else {
+        console.log('⚠️ Сны не найдены в базе данных')
         setDreams([])
       }
     } catch (error) {
       console.error('❌ Ошибка загрузки снов из Supabase:', error)
+      console.error('Детали ошибки:', error)
       
       // Показываем ошибку пользователю
-      if (error instanceof Error && error.message.includes('does not exist')) {
-        alert('⚠️ Таблица снов не создана в Supabase!\n\nВыполните SQL из файла CREATE_TABLES.sql:\n1. Откройте Supabase Dashboard\n2. SQL Editor → New query\n3. Вставьте код из CREATE_TABLES.sql\n4. Нажмите Run')
+      if (error instanceof Error) {
+        if (error.message.includes('does not exist')) {
+          alert('⚠️ Таблица снов не создана в Supabase!\n\nВыполните SQL из файла CREATE_TABLES.sql:\n1. Откройте Supabase Dashboard\n2. SQL Editor → New query\n3. Вставьте код из CREATE_TABLES.sql\n4. Нажмите Run')
+        } else {
+          alert(`⚠️ Ошибка загрузки снов: ${error.message}\n\nПроверьте консоль браузера (F12) для деталей.`)
+        }
       }
       
       setDreams([])

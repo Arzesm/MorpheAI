@@ -25,61 +25,76 @@ export function useDreams() {
   const [dreams, setDreams] = useState<Dream[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  useEffect(() => {
-    const loadDreams = async () => {
-      // Если есть свежий кэш, используем его
-      const now = Date.now()
-      if (dreamsCache && (now - cacheTimestamp) < CACHE_DURATION) {
-        setDreams(dreamsCache)
+  const loadDreams = async (forceRefresh = false) => {
+    // Если принудительная перезагрузка - очищаем кэш
+    if (forceRefresh) {
+      invalidateDreamsCache()
+    }
+
+    // Если есть свежий кэш и не принудительная перезагрузка, используем его
+    const now = Date.now()
+    if (!forceRefresh && dreamsCache && (now - cacheTimestamp) < CACHE_DURATION) {
+      setDreams(dreamsCache)
+      setIsLoading(false)
+      return
+    }
+
+    // Если уже идет загрузка, ждем её
+    if (dreamsCachePromise && !forceRefresh) {
+      try {
+        const cachedDreams = await dreamsCachePromise
+        setDreams(cachedDreams)
         setIsLoading(false)
         return
-      }
-
-      // Если уже идет загрузка, ждем её
-      if (dreamsCachePromise) {
-        try {
-          const cachedDreams = await dreamsCachePromise
-          setDreams(cachedDreams)
-          setIsLoading(false)
-          return
-        } catch (err) {
-          // Если загрузка провалилась, продолжаем с новой
-        }
-      }
-
-      // Загружаем сны
-      setIsLoading(true)
-      setError(null)
-      
-      dreamsCachePromise = dreamService.getAll()
-      
-      try {
-        const allDreams = await dreamsCachePromise
-        
-        if (allDreams) {
-          dreamsCache = allDreams
-          cacheTimestamp = now
-          setDreams(allDreams)
-        } else {
-          dreamsCache = []
-          setDreams([])
-        }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Ошибка загрузки снов')
-        setError(error)
-        console.error('❌ Ошибка загрузки снов:', error)
-        setDreams([])
-      } finally {
-        setIsLoading(false)
-        dreamsCachePromise = null
+        // Если загрузка провалилась, продолжаем с новой
       }
     }
 
-    loadDreams()
-  }, [])
+    // Загружаем сны
+    setIsLoading(true)
+    setError(null)
+    
+    dreamsCachePromise = dreamService.getAll()
+    
+    try {
+      const allDreams = await dreamsCachePromise
+      
+      console.log('📚 Загружено снов из базы:', allDreams?.length || 0)
+      
+      if (allDreams && allDreams.length > 0) {
+        dreamsCache = allDreams
+        cacheTimestamp = now
+        setDreams(allDreams)
+        console.log('✅ Сны загружены в кэш:', allDreams.length)
+      } else {
+        dreamsCache = []
+        setDreams([])
+        console.log('⚠️ Сны не найдены в базе данных')
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Ошибка загрузки снов')
+      setError(error)
+      console.error('❌ Ошибка загрузки снов:', error)
+      console.error('Детали ошибки:', err)
+      setDreams([])
+    } finally {
+      setIsLoading(false)
+      dreamsCachePromise = null
+    }
+  }
 
-  return { dreams, isLoading, error }
+  useEffect(() => {
+    loadDreams()
+  }, [refreshKey])
+
+  const refresh = () => {
+    setRefreshKey(prev => prev + 1)
+  }
+
+  return { dreams, isLoading, error, refresh }
 }
 
 // Хук для получения только нужных полей (быстрее для статистики и календаря)

@@ -6,7 +6,7 @@ import { useMemo } from 'react'
 import { useDreams } from '@/hooks/useDreams'
 
 export default function RecentDreams() {
-  const { dreams: allDreams, isLoading } = useDreams()
+  const { dreams: allDreams, isLoading, error } = useDreams()
   
   // Сортируем по дате (новые сверху) и берём последние 3
   const recentDreams = useMemo(() => {
@@ -63,6 +63,18 @@ export default function RecentDreams() {
               </div>
             </div>
           ))}
+        </div>
+      ) : error ? (
+        <div className="card p-8 text-center">
+          <div className="text-5xl mb-3">⚠️</div>
+          <p className="text-mythic-ivory/60 mb-4">Ошибка загрузки снов</p>
+          <p className="text-mythic-ivory/40 text-xs mb-4">{error.message}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn-primary"
+          >
+            Перезагрузить страницу
+          </button>
         </div>
       ) : recentDreams.length === 0 ? (
         <div className="card p-8 text-center">
