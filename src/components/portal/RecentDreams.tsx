@@ -4,6 +4,8 @@ import { BookOpen, Calendar, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { useDreams } from '@/hooks/useDreams'
+import { getEmojiFromTags, getEmojiFromContent } from '@/lib/emojiMapper'
+import { Dream } from '@/lib/supabase'
 
 export default function RecentDreams() {
   const { dreams: allDreams, isLoading, error } = useDreams()
@@ -17,14 +19,15 @@ export default function RecentDreams() {
     return sorted.slice(0, 3)
   }, [allDreams])
 
-  const getEmojiForContent = (content: string) => {
-    const lowerContent = content.toLowerCase()
-    if (lowerContent.includes('полёт') || lowerContent.includes('лет')) return '✨'
-    if (lowerContent.includes('дом')) return '🏠'
-    if (lowerContent.includes('лес')) return '🌲'
-    if (lowerContent.includes('вода') || lowerContent.includes('море')) return '🌊'
-    if (lowerContent.includes('город')) return '🏙️'
-    return '💭'
+  const getEmojiForDream = (dream: Dream) => {
+    // Сначала проверяем теги
+    if (dream.tags && dream.tags.length > 0) {
+      const emojiFromTags = getEmojiFromTags(dream.tags)
+      if (emojiFromTags) return emojiFromTags
+    }
+    
+    // Если теги не подошли, используем контент
+    return getEmojiFromContent(dream.content)
   }
 
   const formatDate = (dateString: string) => {
