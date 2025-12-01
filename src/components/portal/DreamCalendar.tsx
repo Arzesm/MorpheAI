@@ -270,7 +270,7 @@ export default function DreamCalendar() {
                     <div className="card p-4 hover:scale-[1.02] transition-all cursor-pointer group">
                       <div className="flex items-start space-x-3">
                         <div className="text-3xl transform transition-transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
-                          <span className="text-3xl">{getDreamTypeEmoji(dream.dream_type)}</span>
+                          {getDreamTypeEmoji(dream.dream_type)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-mythic-ivory font-semibold text-sm mb-1 truncate">
