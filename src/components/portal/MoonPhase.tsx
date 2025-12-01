@@ -185,7 +185,7 @@ export default function MoonPhase() {
           <div className="flex items-center space-x-4 gap-4">
             <div className="relative">
               <div className="absolute inset-0 bg-morphe-blue/30 rounded-full blur-xl animate-pulse" />
-              <div className="relative text-3xl animate-float"><span className="text-3xl">{moonData.emoji}</span></div>
+              <div className="relative text-6xl animate-float">{moonData.emoji}</div>
             </div>
             <div>
               <div className="flex items-center space-x-2 gap-2 mb-1">
