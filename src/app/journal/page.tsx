@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useRef } from 'react'
 import { Plus, Search, Filter, X, Download, Upload } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import DreamCard from '@/components/journal/DreamCard'
@@ -223,10 +224,21 @@ function JournalContent() {
 
   return (
     <div className="space-y-5 pb-6 animate-fade-in">
-      <Header />
+      {/* Header with logo and buttons aligned */}
+      <div className="flex items-center justify-between mb-6">
+        {/* Logo */}
+        <Link href="/portal" className="relative w-40 h-12 cursor-pointer group">
+          <Image
+            src="https://i.postimg.cc/nznsrDSf/cbb6618b-6539-4097-a39c-81dc01fe57d4.png"
+            alt="MorpheAI Logo"
+            fill
+            className="object-contain drop-shadow-[0_0_15px_rgba(30,144,255,0.3)] transition-all group-hover:drop-shadow-[0_0_25px_rgba(30,144,255,0.5)] group-hover:scale-105"
+            priority
+          />
+        </Link>
 
-      {/* Action buttons row */}
-      <div className="flex items-center justify-end space-x-2 gap-2">
+        {/* Action buttons */}
+        <div className="flex items-center space-x-2 gap-2">
         {/* Export/Import buttons */}
         <div className="relative group">
           <button
