@@ -1,4 +1,4 @@
-const CACHE_NAME = 'morpheai-v1'
+const CACHE_NAME = 'morpheai-v2'
 const urlsToCache = [
   '/',
   '/portal',
@@ -14,10 +14,12 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache')
+        console.log('Opened cache:', CACHE_NAME)
         return cache.addAll(urlsToCache)
       })
   )
+  // Force activation of new service worker
+  self.skipWaiting()
 })
 
 // Fetch event - serve from cache when offline
@@ -54,17 +56,20 @@ self.addEventListener('fetch', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME]
-  
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          // Delete all old caches
+          if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName)
             return caches.delete(cacheName)
           }
         })
       )
+    }).then(() => {
+      // Force claim all clients to use new service worker
+      return self.clients.claim()
     })
   )
 })
