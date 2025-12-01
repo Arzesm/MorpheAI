@@ -99,7 +99,7 @@ export default function RecentDreams() {
                     <div className="relative">
                       <div className="absolute inset-0 bg-morphe-blue/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="relative text-4xl p-2 bg-gradient-to-br from-mythic-ivory/10 to-mythic-ivory/20 rounded-2xl backdrop-blur-sm transform transition-transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
-                        {getEmojiForContent(dream.content)}
+                        {getEmojiForDream(dream)}
                       </div>
                     </div>
                     
