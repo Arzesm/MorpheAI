@@ -145,8 +145,18 @@ export default function MonthlyStats() {
             Статистика месяца
           </h2>
         </div>
-        <div className="card p-8 flex justify-center items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-morphe-blue" />
+        {/* Skeleton для статистики */}
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="card p-4 animate-pulse">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 bg-mythic-ivory/10 rounded-xl" />
+                <div className="w-12 h-6 bg-mythic-ivory/10 rounded-lg" />
+              </div>
+              <div className="w-16 h-4 bg-mythic-ivory/10 rounded mb-2" />
+              <div className="w-12 h-8 bg-mythic-ivory/10 rounded" />
+            </div>
+          ))}
         </div>
       </div>
     )

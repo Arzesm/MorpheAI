@@ -3,15 +3,21 @@ import { dreamService, Dream } from '@/lib/supabase'
 
 // Глобальный кэш для снов (в памяти)
 let dreamsCache: Dream[] | null = null
+let dreamsLightCache: Dream[] | null = null
 let dreamsCachePromise: Promise<Dream[]> | null = null
+let dreamsLightCachePromise: Promise<Dream[]> | null = null
 let cacheTimestamp: number = 0
+let lightCacheTimestamp: number = 0
 const CACHE_DURATION = 60000 // 60 секунд
 
 // Функция для инвалидации кэша
 export function invalidateDreamsCache() {
   dreamsCache = null
+  dreamsLightCache = null
   cacheTimestamp = 0
+  lightCacheTimestamp = 0
   dreamsCachePromise = null
+  dreamsLightCachePromise = null
 }
 
 // Хук для получения всех снов с кэшированием
@@ -83,30 +89,40 @@ export function useDreamsLight() {
 
   useEffect(() => {
     const loadDreams = async () => {
+      // Если есть свежий кэш, используем его
+      const now = Date.now()
+      if (dreamsLightCache && (now - lightCacheTimestamp) < CACHE_DURATION) {
+        setDreams(dreamsLightCache)
+        setIsLoading(false)
+        return
+      }
+
+      // Если уже идет загрузка, ждем её
+      if (dreamsLightCachePromise) {
+        try {
+          const cachedDreams = await dreamsLightCachePromise
+          setDreams(cachedDreams)
+          setIsLoading(false)
+          return
+        } catch (err) {
+          // Если загрузка провалилась, продолжаем с новой
+        }
+      }
+
+      // Загружаем сны (только легкие поля, без content)
       setIsLoading(true)
+      
+      dreamsLightCachePromise = dreamService.getAllLight()
+      
       try {
-        // Используем dreamService для совместимости
-        const allDreams = await dreamService.getAll()
+        const allDreams = await dreamsLightCachePromise
         
         if (allDreams) {
-          // Оставляем только нужные поля (убираем content для экономии памяти)
-          const lightDreams = allDreams.map(({ id, title, date, emotion, emotion_emoji, dream_type, tags, archetype, created_at }) => ({
-            id,
-            title,
-            date,
-            emotion,
-            emotion_emoji,
-            dream_type,
-            tags,
-            archetype,
-            created_at,
-            content: '', // Пустой content для совместимости с типом
-            has_interpretation: false,
-            has_image: false
-          })) as Dream[]
-          
-          setDreams(lightDreams)
+          dreamsLightCache = allDreams
+          lightCacheTimestamp = now
+          setDreams(allDreams)
         } else {
+          dreamsLightCache = []
           setDreams([])
         }
       } catch (error) {
@@ -114,6 +130,7 @@ export function useDreamsLight() {
         setDreams([])
       } finally {
         setIsLoading(false)
+        dreamsLightCachePromise = null
       }
     }
 

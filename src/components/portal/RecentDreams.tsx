@@ -46,8 +46,23 @@ export default function RecentDreams() {
       </div>
 
       {isLoading ? (
-        <div className="card p-8 flex justify-center items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-morphe-blue" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card p-5 animate-pulse">
+              <div className="flex items-start space-x-4">
+                <div className="w-16 h-16 bg-mythic-ivory/10 rounded-2xl" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-4 bg-mythic-ivory/10 rounded w-3/4" />
+                  <div className="h-3 bg-mythic-ivory/10 rounded w-full" />
+                  <div className="h-3 bg-mythic-ivory/10 rounded w-2/3" />
+                  <div className="flex gap-2">
+                    <div className="h-6 bg-mythic-ivory/10 rounded-full w-16" />
+                    <div className="h-6 bg-mythic-ivory/10 rounded-full w-16" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : recentDreams.length === 0 ? (
         <div className="card p-8 text-center">

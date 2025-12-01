@@ -176,8 +176,10 @@ export default function DreamCalendar() {
 
         {/* Calendar grid */}
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-morphe-blue" />
+          <div className="grid grid-cols-7 gap-1 animate-pulse">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-mythic-ivory/10 rounded-xl" />
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-7 gap-1">
