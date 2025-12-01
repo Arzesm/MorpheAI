@@ -166,7 +166,7 @@ export default function DreamCalendar() {
         </div>
 
         {/* Days of week */}
-        <div className="grid grid-cols-7 gap-1 mb-3">
+        <div className="grid grid-cols-7 gap-1.5 mb-4">
           {days.map((day) => (
             <div key={day} className="text-center text-mythic-ivory/50 text-xs font-semibold tracking-wide py-2">
               {day}
@@ -176,13 +176,13 @@ export default function DreamCalendar() {
 
         {/* Calendar grid */}
         {isLoading ? (
-          <div className="grid grid-cols-7 gap-1 animate-pulse">
+          <div className="grid grid-cols-7 gap-1.5 animate-pulse">
             {Array.from({ length: 35 }).map((_, i) => (
               <div key={i} className="aspect-square bg-mythic-ivory/10 rounded-xl" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1.5">
             {/* Empty cells for days before month starts */}
             {Array.from({ length: firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1 }).map((_, i) => (
               <div key={`empty-${i}`} className="aspect-square" />
@@ -218,8 +218,8 @@ export default function DreamCalendar() {
         )}
 
         {/* Legend */}
-        <div className="divider my-4" />
-        <div className="flex flex-wrap gap-3 text-xs">
+        <div className="divider my-5" />
+        <div className="flex flex-wrap gap-3 gap-y-2.5 text-xs">
           <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-morphe-blue/10 backdrop-blur-sm">
             <div className="w-2.5 h-2.5 rounded-full bg-morphe-blue shadow-lg shadow-morphe-blue/50" />
             <span className="text-mythic-ivory/80 font-medium">Обычный</span>

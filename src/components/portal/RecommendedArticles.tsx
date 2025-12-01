@@ -41,11 +41,11 @@ export default function RecommendedArticles() {
         </Link>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {articles.map((article) => (
           <Link key={article.id} href={`/knowledge/${article.id}`}>
             <div className="card-glass p-4 hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-between group">
-              <div className="flex items-center space-x-3 flex-1">
+              <div className="flex items-center space-x-3 gap-3 flex-1">
                 <div className="text-3xl p-2 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-xl backdrop-blur-sm">
                   {article.icon}
                 </div>
@@ -53,7 +53,7 @@ export default function RecommendedArticles() {
                   <h3 className="text-mythic-ivory font-semibold text-sm truncate mb-1">
                     {article.title}
                   </h3>
-                  <div className="flex items-center space-x-2 text-xs">
+                  <div className="flex items-center space-x-2 gap-2 text-xs">
                     <span className="badge badge-primary">{article.category}</span>
                     <span className="text-mythic-ivory/60">{article.readTime}</span>
                   </div>

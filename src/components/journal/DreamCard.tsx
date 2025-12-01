@@ -100,7 +100,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
     <div className="relative group">
       <Link href={`/journal/${dream.id}`}>
         <div className="card p-5 hover:scale-[1.01] hover:shadow-2xl transition-all cursor-pointer">
-          <div className="flex items-start space-x-4">
+          <div className="flex items-start space-x-4 gap-4">
             <div className="relative">
               <div className="absolute inset-0 bg-morphe-blue/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative text-4xl p-2 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-2xl backdrop-blur-sm">
@@ -109,7 +109,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
             </div>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-2">
+              <div className="flex items-start justify-between gap-3 mb-2">
                 <h3 className="text-mythic-ivory font-bold text-base truncate flex-1 tracking-tight">
                   {dream.title}
                 </h3>
@@ -120,7 +120,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
                 {preview}
               </p>
               
-              <div className="flex items-center space-x-3 text-xs text-mythic-ivory/60 mb-3">
+              <div className="flex items-center space-x-3 gap-3 text-xs text-mythic-ivory/60 mb-3">
                 <span className="flex items-center">
                   <Calendar size={12} className="mr-1" />
                   {formatDate(dream.date)}
@@ -130,7 +130,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
                 </span>
               </div>
               
-              <div className="flex flex-wrap gap-2 mb-3">
+              <div className="flex flex-wrap gap-2.5 mb-3">
                 {dream.tags.map((tag: string) => (
                   <a
                     key={tag}
@@ -146,7 +146,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
                 </span>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 gap-2">
                 {dream.has_interpretation && (
                   <span className="flex items-center text-xs text-morphe-blue">
                     <Sparkles size={12} className="mr-1" />

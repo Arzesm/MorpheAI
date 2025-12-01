@@ -213,7 +213,7 @@ function JournalContent() {
 
       {/* Dreams List */}
       {!isLoading && filteredDreams.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredDreams.map((dream) => (
             <DreamCard 
               key={dream.id} 

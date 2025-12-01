@@ -183,7 +183,7 @@ export default function MonthlyStats() {
             <div className={`card p-4 group ${stat.link ? 'hover:scale-[1.02] cursor-pointer' : ''} transition-transform`}>
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity`} />
               <div className="relative z-10">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between gap-3 mb-3">
                   <div className="p-2 rounded-xl bg-mythic-ivory/5 backdrop-blur-sm">
                     <stat.icon size={20} className={stat.color} />
                   </div>
