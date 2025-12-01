@@ -35,10 +35,15 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - always fetch from network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Skip caching for API routes and external resources
+  // Skip caching for API routes, external resources, and unsupported schemes
+  const url = new URL(event.request.url)
   if (event.request.url.includes('/api/') || 
       event.request.url.includes('supabase.co') ||
-      event.request.url.includes('openai.com')) {
+      event.request.url.includes('openai.com') ||
+      url.protocol === 'chrome-extension:' ||
+      url.protocol === 'moz-extension:' ||
+      url.protocol === 'safari-extension:' ||
+      !url.protocol.startsWith('http')) {
     return fetch(event.request)
   }
 
@@ -55,7 +60,15 @@ self.addEventListener('fetch', (event) => {
 
         caches.open(CACHE_NAME)
           .then((cache) => {
-            cache.put(event.request, responseToCache)
+            // Only cache if request is cacheable
+            try {
+              cache.put(event.request, responseToCache)
+            } catch (error) {
+              console.warn('Failed to cache request:', event.request.url, error)
+            }
+          })
+          .catch((error) => {
+            console.warn('Cache error:', error)
           })
 
         return response
