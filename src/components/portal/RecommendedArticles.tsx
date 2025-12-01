@@ -29,7 +29,7 @@ export default function RecommendedArticles() {
   ]
 
   return (
-    <div className="mb-2">
+    <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="section-header flex items-center">
           <Library size={22} className="mr-2 text-morphe-blue" />
@@ -41,7 +41,7 @@ export default function RecommendedArticles() {
         </Link>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-6">
         {articles.map((article) => (
           <Link key={article.id} href={`/knowledge/${article.id}`}>
             <div className="card-glass p-4 hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-between group">

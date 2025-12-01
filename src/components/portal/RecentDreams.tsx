@@ -33,7 +33,7 @@ export default function RecentDreams() {
   }
 
   return (
-    <div className="mb-2">
+    <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="section-header flex items-center">
           <BookOpen size={22} className="mr-2 text-morphe-blue" />
@@ -46,7 +46,7 @@ export default function RecentDreams() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="card p-5 animate-pulse">
               <div className="flex items-start space-x-4">
@@ -87,7 +87,7 @@ export default function RecentDreams() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {recentDreams.map((dream) => {
             // Извлекаем чистый текст из HTML для preview
             const cleanText = dream.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
