@@ -85,60 +85,6 @@ export default function MonthlyStats() {
 
     return { currentStats, prevStats: previousStats }
   })()
-        if (allDreams) {
-          const now = new Date()
-          const currentMonth = now.getMonth()
-          const currentYear = now.getFullYear()
-
-          // Предыдущий месяц
-          const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1
-          const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear
-
-          // Фильтруем сны текущего месяца
-          const currentMonthDreams = allDreams.filter((dream) => {
-            const dreamDate = new Date(dream.date)
-            return (
-              dreamDate.getMonth() === currentMonth &&
-              dreamDate.getFullYear() === currentYear
-            )
-          })
-
-          // Фильтруем сны предыдущего месяца
-          const prevMonthDreams = allDreams.filter((dream) => {
-            const dreamDate = new Date(dream.date)
-            return (
-              dreamDate.getMonth() === prevMonth &&
-              dreamDate.getFullYear() === prevYear
-            )
-          })
-
-          const emotionScores: Record<string, number> = {
-            'Радость': 10,
-            'Спокойствие': 9,
-            'Удивление': 7,
-            'Ностальгия': 6,
-            'Грусть': 4,
-            'Тревога': 3,
-            'Страх': 2
-          }
-
-          // Функция для расчета статистики
-          const calculateStats = (dreams: Dream[]) => {
-            const totalDreams = dreams.length
-            const lucidDreams = dreams.filter((d) => d.dream_type === 'lucid').length
-            const anxiousDreams = dreams.filter((d) => 
-              d.emotion === 'Тревога' || d.emotion === 'Страх' || d.dream_type === 'nightmare'
-            ).length
-
-            const totalScore = dreams.reduce((sum, dream) => {
-              return sum + (emotionScores[dream.emotion] || 5)
-            }, 0)
-            
-            const emotionIndex = totalDreams > 0 ? parseFloat((totalScore / totalDreams).toFixed(1)) : 0
-
-            return { totalDreams, lucidDreams, anxiousDreams, emotionIndex }
-          }
-
 
   const getChange = (current: number, previous: number) => {
     const diff = current - previous
