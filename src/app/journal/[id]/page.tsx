@@ -173,7 +173,7 @@ export default function DreamDetailPage({ params }: PageProps) {
               Создан: {new Date(dream.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
             </span>
             <span className="flex items-center">
-              {dream.emotion_emoji} {dream.emotion}
+              <span className="text-3xl">{dream.emotion_emoji}</span> <span className="ml-1">{dream.emotion}</span>
             </span>
           </div>
           {dream.updated_at && new Date(dream.updated_at).getTime() > new Date(dream.created_at).getTime() + 1000 && (

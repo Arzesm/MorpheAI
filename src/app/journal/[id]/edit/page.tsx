@@ -211,7 +211,7 @@ export default function EditDreamPage({ params }: PageProps) {
                     : 'bg-mythic-ivory/10 text-mythic-ivory/60'
                 }`}
               >
-                <span>{type.emoji}</span>
+                <span className="text-3xl">{type.emoji}</span>
                 <span>{type.label}</span>
               </button>
             ))}
@@ -234,7 +234,7 @@ export default function EditDreamPage({ params }: PageProps) {
                     : 'bg-mythic-ivory/10 text-mythic-ivory/60'
                 }`}
               >
-                <span>{emotion.emoji}</span>
+                <span className="text-3xl">{emotion.emoji}</span>
                 <span>{emotion.name}</span>
               </button>
             ))}

@@ -126,7 +126,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
                   {formatDate(dream.date)}
                 </span>
                 <span className="flex items-center">
-                  {dream.emotion_emoji} {dream.emotion}
+                  <span className="text-3xl">{dream.emotion_emoji}</span> <span className="ml-1">{dream.emotion}</span>
                 </span>
               </div>
               
