@@ -94,6 +94,99 @@ function JournalContent() {
     setShowAnxious(false)
     router.push('/journal')
   }
+
+  const handleExport = async (format: 'json' | 'text' | 'csv') => {
+    if (dreams.length === 0) {
+      alert('Нет снов для экспорта')
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      let content = ''
+      let filename = ''
+      let mimeType = ''
+
+      switch (format) {
+        case 'json':
+          content = exportDreamsToJSON(dreams)
+          filename = `dreams-export-${new Date().toISOString().split('T')[0]}.json`
+          mimeType = 'application/json'
+          break
+        case 'text':
+          content = exportDreamsToText(dreams)
+          filename = `dreams-export-${new Date().toISOString().split('T')[0]}.txt`
+          mimeType = 'text/plain'
+          break
+        case 'csv':
+          content = exportDreamsToCSV(dreams)
+          filename = `dreams-export-${new Date().toISOString().split('T')[0]}.csv`
+          mimeType = 'text/csv'
+          break
+      }
+
+      downloadFile(content, filename, mimeType)
+    } catch (error) {
+      console.error('Ошибка экспорта:', error)
+      alert('Ошибка при экспорте снов')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsImporting(true)
+    try {
+      const text = await file.text()
+      const importedDreams = importDreams(text, file.name)
+      
+      if (importedDreams.length === 0) {
+        alert('Не удалось распознать сны в файле. Проверьте формат файла.')
+        setIsImporting(false)
+        return
+      }
+
+      const confirmMessage = `Найдено снов: ${importedDreams.length}\n\nПродолжить импорт?`
+      if (!confirm(confirmMessage)) {
+        setIsImporting(false)
+        return
+      }
+
+      const dreamsToSave = convertImportedDreams(importedDreams)
+      
+      // Сохраняем сны по одному
+      let successCount = 0
+      let errorCount = 0
+
+      for (const dream of dreamsToSave) {
+        try {
+          await dreamService.create(dream)
+          successCount++
+        } catch (error) {
+          console.error('Ошибка сохранения сна:', error)
+          errorCount++
+        }
+      }
+
+      // Очищаем кэш и перезагружаем
+      invalidateDreamsCache()
+      await loadDreams()
+
+      alert(`Импорт завершен!\nУспешно: ${successCount}\nОшибок: ${errorCount}`)
+    } catch (error) {
+      console.error('Ошибка импорта:', error)
+      alert(`Ошибка при импорте: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
+    } finally {
+      setIsImporting(false)
+      // Сбрасываем input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
   
   // Фильтрация снов
   const filteredDreams = dreams.filter((dream) => {
