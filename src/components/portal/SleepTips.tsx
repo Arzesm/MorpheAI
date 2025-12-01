@@ -30,7 +30,7 @@ export default function SleepTips() {
 
       <div className="grid gap-3">
         {tips.map((tip, index) => (
-          <div key={index} className="card-glass p-4 flex items-start space-x-3 hover:scale-[1.01] transition-all group">
+          <div key={index} className="card-glass p-4 flex items-start space-x-3 gap-3 hover:scale-[1.01] transition-all group">
             <div className="relative">
               <div className="absolute inset-0 bg-light-ai-blue/30 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative text-3xl p-2 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-xl backdrop-blur-sm">
