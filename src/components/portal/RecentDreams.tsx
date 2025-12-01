@@ -46,7 +46,7 @@ export default function RecentDreams() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-5">
           {[1, 2, 3].map((i) => (
             <div key={i} className="card p-5 animate-pulse">
               <div className="flex items-start space-x-4">
@@ -75,7 +75,7 @@ export default function RecentDreams() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {recentDreams.map((dream) => {
             // Извлекаем чистый текст из HTML для preview
             const cleanText = dream.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
