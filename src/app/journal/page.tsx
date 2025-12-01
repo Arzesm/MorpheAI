@@ -208,12 +208,12 @@ function JournalContent() {
     const matchesSearch = 
       dream.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dream.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dream.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      (dream.tags && dream.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase())))
     
     // Фильтр по активному тегу
-    const matchesTag = !activeTag || dream.tags.some((tag: string) => 
+    const matchesTag = !activeTag || (dream.tags && dream.tags.some((tag: string) => 
       tag.toLowerCase() === activeTag.toLowerCase()
-    )
+    ))
     
     // Фильтр по типу сна
     const matchesType = !activeType || dream.dream_type === activeType

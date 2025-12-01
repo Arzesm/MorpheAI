@@ -393,18 +393,38 @@ export function importDreams(fileContent: string, filename: string): ImportedDre
 /**
  * Преобразование импортированных снов в формат для сохранения
  */
-export function convertImportedDreams(importedDreams: ImportedDream[]): Omit<Dream, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'has_interpretation' | 'has_image' | 'image_url'>[] {
-  return importedDreams.map(dream => ({
-    title: dream.title || 'Без названия',
-    content: dream.content || '',
-    date: dream.date || new Date().toISOString().split('T')[0],
-    emotion: dream.emotion || 'Нейтральная',
-    emotion_emoji: dream.emotion_emoji || '😐',
-    dream_type: dream.dream_type || 'normal',
-    tags: dream.tags || [],
-    archetype: dream.archetype || 'Не определен',
-    interpretation: dream.interpretation || undefined,
-    has_interpretation: !!dream.interpretation
-  }))
+export function convertImportedDreams(importedDreams: ImportedDream[]): Omit<Dream, 'id' | 'created_at' | 'updated_at' | 'user_id'>[] {
+  return importedDreams.map(dream => {
+    // Преобразуем interpretation в правильный формат
+    let interpretation: Dream['interpretation'] = undefined
+    if (dream.interpretation) {
+      const interp = dream.interpretation
+      // Проверяем, что все обязательные поля присутствуют
+      if (interp.summary && interp.symbols && interp.recommendations) {
+        interpretation = {
+          summary: interp.summary,
+          symbols: interp.symbols,
+          recommendations: interp.recommendations
+        }
+      }
+    }
+    
+    const hasInterpretation = !!interpretation
+    
+    return {
+      title: dream.title || 'Без названия',
+      content: dream.content || '',
+      date: dream.date || new Date().toISOString().split('T')[0],
+      emotion: dream.emotion || 'Нейтральная',
+      emotion_emoji: dream.emotion_emoji || '😐',
+      dream_type: dream.dream_type || 'normal',
+      tags: dream.tags || [],
+      archetype: dream.archetype || 'Не определен',
+      has_interpretation: hasInterpretation,
+      interpretation: interpretation,
+      has_image: false,
+      image_url: undefined
+    } as Omit<Dream, 'id' | 'created_at' | 'updated_at' | 'user_id'>
+  })
 }
 
