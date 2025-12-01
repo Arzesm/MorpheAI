@@ -163,7 +163,7 @@ export default function MonthlyStats() {
   }
 
   return (
-    <div>
+    <div className="mb-2">
       <div className="flex items-center justify-between mb-4">
         <h2 className="section-header flex items-center">
           <TrendingUp size={22} className="mr-2 text-morphe-blue" />
