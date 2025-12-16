@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// API ключ Gemini
-const GEMINI_API_KEY = 'AIzaSyDZLnYszTdtS2HRNmZ8jix6NKivSZwmQqY'
+// API ключ Gemini из секретов Supabase
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent'
 
 // Fallback статьи на случай ошибки Gemini API (только реальные ссылки)
@@ -127,6 +127,11 @@ function getFallbackArticles(category: string = 'all') {
 // Функция для поиска статей через Gemini API
 async function searchArticlesWithGemini(category: string = 'all') {
   try {
+    if (!GEMINI_API_KEY) {
+      console.error('❌ GEMINI_API_KEY не настроен в секретах Supabase')
+      throw new Error('GEMINI_API_KEY не настроен')
+    }
+    
     console.log('🔍 Поиск статей о снах через Gemini API...')
     
     const categoryPrompts: Record<string, string> = {
