@@ -11,6 +11,7 @@ export default function KnowledgePage() {
   const [articles, setArticles] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [lastUpdateDate, setLastUpdateDate] = useState<string>('')
 
   const categories = [
     { id: 'all', name: 'Все', icon: '📚' },
@@ -104,6 +105,21 @@ export default function KnowledgePage() {
           if (cached && cached.length > 0) {
             setArticles(cached)
             setIsSearching(false)
+            
+            // Обновляем дату для отображения
+            if (typeof window !== 'undefined') {
+              const lastUpdate = localStorage.getItem('articles_last_update')
+              if (lastUpdate) {
+                const date = new Date(lastUpdate)
+                const formatted = date.toLocaleDateString('ru-RU', { 
+                  day: 'numeric', 
+                  month: 'long',
+                  year: 'numeric'
+                })
+                setLastUpdateDate(formatted)
+              }
+            }
+            
             console.log('✅ Использованы закешированные статьи')
             return
           }
@@ -185,6 +201,18 @@ export default function KnowledgePage() {
           setArticles(formattedArticles)
           // Кешируем новые статьи
           cacheArticles(formattedArticles)
+          
+          // Обновляем дату для отображения
+          if (typeof window !== 'undefined') {
+            const date = new Date()
+            const formatted = date.toLocaleDateString('ru-RU', { 
+              day: 'numeric', 
+              month: 'long',
+              year: 'numeric'
+            })
+            setLastUpdateDate(formatted)
+          }
+          
           console.log(`✅ Отображено ${formattedArticles.length} новых статей`)
         } else {
           console.warn('⚠️ Статьи не найдены или пустой массив. Данные:', data)
@@ -409,24 +437,12 @@ export default function KnowledgePage() {
         <p className="text-mythic-ivory/60 text-sm mt-1 font-medium">
           Актуальные новости и исследования о снах из проверенных научных источников
         </p>
-        {typeof window !== 'undefined' && (() => {
-          const lastUpdate = localStorage.getItem('articles_last_update')
-          if (lastUpdate) {
-            const date = new Date(lastUpdate)
-            const formatted = date.toLocaleDateString('ru-RU', { 
-              day: 'numeric', 
-              month: 'long',
-              year: 'numeric'
-            })
-            return (
-              <p className="text-mythic-ivory/40 text-xs mt-2 flex items-center">
-                <span className="mr-1">📅</span>
-                Обновлено: {formatted} • Следующее обновление в понедельник
-              </p>
-            )
-          }
-          return null
-        })()}
+        {lastUpdateDate && (
+          <p className="text-mythic-ivory/40 text-xs mt-2 flex items-center">
+            <span className="mr-1">📅</span>
+            Обновлено: {lastUpdateDate} • Следующее обновление в понедельник
+          </p>
+        )}
       </div>
 
       {/* Search */}
