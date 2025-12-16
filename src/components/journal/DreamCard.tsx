@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Calendar, Image, Sparkles, Trash2 } from 'lucide-react'
 import { dreamService } from '@/lib/supabase'
-import { getEmojiFromTags, getEmojiFromContent } from '@/lib/emojiMapper'
 
 interface DreamCardProps {
   dream: {
@@ -44,7 +43,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
       case 'epic':
         return (
           <span className="px-2 py-1 bg-yellow-500/30 text-yellow-400 text-xs rounded-full flex items-center space-x-1">
-            <span>⭐</span>
+            <span>🌟</span>
             <span>Эпический</span>
           </span>
         )
@@ -58,15 +57,16 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
-  const getEmojiForDream = () => {
-    // Сначала проверяем теги
-    if (dream.tags && dream.tags.length > 0) {
-      const emojiFromTags = getEmojiFromTags(dream.tags)
-      if (emojiFromTags) return emojiFromTags
-    }
-    
-    // Если теги не подошли, используем контент
-    return getEmojiFromContent(dream.content)
+  const getEmojiForContent = (content: string) => {
+    // Простая логика выбора эмодзи на основе контента
+    const lowerContent = content.toLowerCase()
+    if (lowerContent.includes('полёт') || lowerContent.includes('лет')) return '✨'
+    if (lowerContent.includes('дом')) return '🏠'
+    if (lowerContent.includes('лес')) return '🌲'
+    if (lowerContent.includes('темнота') || lowerContent.includes('преследова')) return '🌑'
+    if (lowerContent.includes('вода') || lowerContent.includes('море')) return '🌊'
+    if (lowerContent.includes('город')) return '🏙️'
+    return '💭'
   }
 
   // Извлекаем чистый текст из HTML для preview
@@ -97,19 +97,19 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
   }
 
   return (
-    <div className="relative group">
+    <div className="relative group mb-6">
       <Link href={`/journal/${dream.id}`}>
         <div className="card p-5 hover:scale-[1.01] hover:shadow-2xl transition-all cursor-pointer">
-          <div className="flex items-start space-x-4 gap-4">
+          <div className="flex items-start space-x-4">
             <div className="relative">
               <div className="absolute inset-0 bg-morphe-blue/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative text-3xl p-2 bg-gradient-to-br from-mythic-ivory/10 to-mythic-ivory/20 rounded-2xl backdrop-blur-sm transform transition-transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
-                <span className="text-3xl">{getEmojiForDream()}</span>
+              <div className="relative text-4xl p-2 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-2xl backdrop-blur-sm">
+                {getEmojiForContent(dream.content)}
               </div>
             </div>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3 mb-2">
+              <div className="flex items-start justify-between mb-2">
                 <h3 className="text-mythic-ivory font-bold text-base truncate flex-1 tracking-tight">
                   {dream.title}
                 </h3>
@@ -120,7 +120,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
                 {preview}
               </p>
               
-              <div className="flex items-center space-x-3 gap-3 text-xs text-mythic-ivory/60 mb-3">
+              <div className="flex items-center space-x-3 text-xs text-mythic-ivory/60 mb-3">
                 <span className="flex items-center">
                   <Calendar size={12} className="mr-1" />
                   {formatDate(dream.date)}
@@ -130,7 +130,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
                 </span>
               </div>
               
-              <div className="flex flex-wrap gap-2.5 mb-3">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {dream.tags.map((tag: string) => (
                   <a
                     key={tag}
@@ -146,7 +146,7 @@ export default function DreamCard({ dream, onDelete }: DreamCardProps) {
                 </span>
               </div>
 
-              <div className="flex items-center space-x-2 gap-2">
+              <div className="flex items-center space-x-2">
                 {dream.has_interpretation && (
                   <span className="flex items-center text-xs text-morphe-blue">
                     <Sparkles size={12} className="mr-1" />

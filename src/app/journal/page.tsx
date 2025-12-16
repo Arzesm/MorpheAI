@@ -1,17 +1,13 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react'
-import { Plus, Search, Filter, X, Download, Upload } from 'lucide-react'
+import { useState, useEffect, Suspense } from 'react'
+import { Plus, Search, Filter, X } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSearchParams, useRouter } from 'next/navigation'
-import Header from '@/components/Header'
 import DreamCard from '@/components/journal/DreamCard'
 import FilterModal from '@/components/journal/FilterModal'
-import { dreamService, Dream } from '@/lib/supabase'
-import { invalidateDreamsCache } from '@/hooks/useDreams'
-import { exportDreamsToJSON, exportDreamsToText, exportDreamsToCSV, downloadFile } from '@/lib/dreamExport'
-import { importDreams, convertImportedDreams } from '@/lib/dreamImport'
+import { dreamService } from '@/lib/supabase'
 
 function JournalContent() {
   const router = useRouter()
@@ -22,14 +18,11 @@ function JournalContent() {
   
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
-  const [dreams, setDreams] = useState<Dream[]>([])
+  const [dreams, setDreams] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [activeType, setActiveType] = useState<string | null>(null)
   const [showAnxious, setShowAnxious] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [isImporting, setIsImporting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Загрузка снов из Supabase при монтировании
   useEffect(() => {
@@ -55,14 +48,11 @@ function JournalContent() {
   async function loadDreams() {
     try {
       setIsLoading(true)
-      console.log('🔄 Загрузка снов из Supabase...')
-      
       const data = await dreamService.getAll()
       
       console.log('📚 Загружено снов из Supabase:', data?.length || 0)
-      console.log('📚 Данные:', data)
       
-      if (data && data.length > 0) {
+      if (data) {
         // Сортируем сны: новые сверху (по created_at в порядке убывания)
         const sortedDreams = [...data].sort((a, b) => {
           const dateA = new Date(a.created_at || a.date || 0).getTime()
@@ -71,22 +61,16 @@ function JournalContent() {
         })
         
         setDreams(sortedDreams)
-        console.log('✅ Сны отсортированы: новые сверху', sortedDreams.length)
+        console.log('✅ Сны отсортированы: новые сверху')
       } else {
-        console.log('⚠️ Сны не найдены в базе данных')
         setDreams([])
       }
     } catch (error) {
       console.error('❌ Ошибка загрузки снов из Supabase:', error)
-      console.error('Детали ошибки:', error)
       
       // Показываем ошибку пользователю
-      if (error instanceof Error) {
-        if (error.message.includes('does not exist')) {
-          alert('⚠️ Таблица снов не создана в Supabase!\n\nВыполните SQL из файла CREATE_TABLES.sql:\n1. Откройте Supabase Dashboard\n2. SQL Editor → New query\n3. Вставьте код из CREATE_TABLES.sql\n4. Нажмите Run')
-        } else {
-          alert(`⚠️ Ошибка загрузки снов: ${error.message}\n\nПроверьте консоль браузера (F12) для деталей.`)
-        }
+      if (error instanceof Error && error.message.includes('does not exist')) {
+        alert('⚠️ Таблица снов не создана в Supabase!\n\nВыполните SQL из файла CREATE_TABLES.sql:\n1. Откройте Supabase Dashboard\n2. SQL Editor → New query\n3. Вставьте код из CREATE_TABLES.sql\n4. Нажмите Run')
       }
       
       setDreams([])
@@ -101,106 +85,6 @@ function JournalContent() {
     setShowAnxious(false)
     router.push('/journal')
   }
-
-  const handleExport = async (format: 'json' | 'text' | 'csv') => {
-    if (dreams.length === 0) {
-      alert('Нет снов для экспорта')
-      return
-    }
-
-    setIsExporting(true)
-    try {
-      let content = ''
-      let filename = ''
-      let mimeType = ''
-
-      switch (format) {
-        case 'json':
-          content = exportDreamsToJSON(dreams)
-          filename = `dreams-export-${new Date().toISOString().split('T')[0]}.json`
-          mimeType = 'application/json'
-          break
-        case 'text':
-          content = exportDreamsToText(dreams)
-          filename = `dreams-export-${new Date().toISOString().split('T')[0]}.txt`
-          mimeType = 'text/plain'
-          break
-        case 'csv':
-          content = exportDreamsToCSV(dreams)
-          filename = `dreams-export-${new Date().toISOString().split('T')[0]}.csv`
-          mimeType = 'text/csv'
-          break
-      }
-
-      downloadFile(content, filename, mimeType)
-    } catch (error) {
-      console.error('Ошибка экспорта:', error)
-      alert('Ошибка при экспорте снов')
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    setIsImporting(true)
-    try {
-      console.log('📥 Начало импорта файла:', file.name, file.type)
-      
-      const text = await file.text()
-      console.log('📄 Размер файла:', text.length, 'символов')
-      console.log('📄 Первые 200 символов:', text.substring(0, 200))
-      
-      const importedDreams = importDreams(text, file.name)
-      console.log('✅ Распознано снов:', importedDreams.length)
-      console.log('📋 Примеры:', importedDreams.slice(0, 2))
-      
-      if (importedDreams.length === 0) {
-        alert('Не удалось распознать сны в файле.\n\nПроверьте формат файла. Поддерживаются:\n- JSON\n- Текст (с разделителями)\n- CSV\n\nУбедитесь, что файл содержит данные о снах.')
-        setIsImporting(false)
-        return
-      }
-
-      const confirmMessage = `Найдено снов: ${importedDreams.length}\n\nПродолжить импорт?`
-      if (!confirm(confirmMessage)) {
-        setIsImporting(false)
-        return
-      }
-
-      const dreamsToSave = convertImportedDreams(importedDreams)
-      
-      // Сохраняем сны по одному
-      let successCount = 0
-      let errorCount = 0
-
-      for (const dream of dreamsToSave) {
-        try {
-          await dreamService.create(dream)
-          successCount++
-        } catch (error) {
-          console.error('Ошибка сохранения сна:', error)
-          errorCount++
-        }
-      }
-
-      // Очищаем кэш и перезагружаем
-      invalidateDreamsCache()
-      await loadDreams()
-
-      alert(`Импорт завершен!\nУспешно: ${successCount}\nОшибок: ${errorCount}`)
-    } catch (error) {
-      console.error('❌ Ошибка импорта:', error)
-      alert(`Ошибка при импорте: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}\n\nПроверьте консоль браузера (F12) для деталей.`)
-    } finally {
-      setIsImporting(false)
-      // Сбрасываем input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
-  }
   
   // Фильтрация снов
   const filteredDreams = dreams.filter((dream) => {
@@ -208,12 +92,12 @@ function JournalContent() {
     const matchesSearch = 
       dream.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dream.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (dream.tags && dream.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+      dream.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
     
     // Фильтр по активному тегу
-    const matchesTag = !activeTag || (dream.tags && dream.tags.some((tag: string) => 
+    const matchesTag = !activeTag || dream.tags.some((tag: string) => 
       tag.toLowerCase() === activeTag.toLowerCase()
-    ))
+    )
     
     // Фильтр по типу сна
     const matchesType = !activeType || dream.dream_type === activeType
@@ -230,90 +114,38 @@ function JournalContent() {
   const hasActiveFilters = activeTag || activeType || showAnxious
 
   return (
-    <div className="space-y-5 pb-6 animate-fade-in">
-      {/* Header with logo and buttons aligned */}
-      <div className="flex items-center justify-between mb-6">
-        {/* Logo */}
-        <Link href="/portal" className="relative w-40 h-12 cursor-pointer group">
-          <Image
-            src="https://i.postimg.cc/nznsrDSf/cbb6618b-6539-4097-a39c-81dc01fe57d4.png"
-            alt="MorpheAI Logo"
-            fill
-            className="object-contain drop-shadow-[0_0_15px_rgba(30,144,255,0.3)] transition-all group-hover:drop-shadow-[0_0_25px_rgba(30,144,255,0.5)] group-hover:scale-105"
-            priority
-          />
-        </Link>
-
-        {/* Action buttons */}
-        <div className="flex items-center space-x-2 gap-2">
-          {/* Export/Import buttons */}
-          <div className="relative group">
-            <button
-              onClick={() => handleExport('json')}
-              disabled={isExporting || dreams.length === 0}
-              className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
-              title="Экспорт"
-            >
-              <Download size={16} />
-              {isExporting ? '...' : ''}
-            </button>
-            
-            {/* Export dropdown */}
-            <div className="absolute right-0 top-full mt-2 w-48 bg-night-deep-blue border border-mythic-ivory/20 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <div className="p-2 space-y-1">
-                <button
-                  onClick={() => handleExport('json')}
-                  className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
-                >
-                  📄 JSON
-                </button>
-                <button
-                  onClick={() => handleExport('text')}
-                  className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
-                >
-                  📝 Текст
-                </button>
-                <button
-                  onClick={() => handleExport('csv')}
-                  className="w-full text-left px-3 py-2 rounded hover:bg-mythic-ivory/10 text-sm"
-                >
-                  📊 CSV
-                </button>
+    <div className="space-y-4 pb-6 animate-fade-in">
+      {/* Beautiful Header with Logo */}
+      <header className="text-center pt-6 relative mb-1">
+        <div className="absolute inset-0 bg-gradient-to-b from-morphe-blue/10 to-transparent blur-3xl" />
+        <div className="relative z-10 flex flex-col items-center space-y-3">
+          <Link href="/portal" className="relative w-48 h-16 cursor-pointer group">
+            <Image
+              src="https://i.postimg.cc/nznsrDSf/cbb6618b-6539-4097-a39c-81dc01fe57d4.png"
+              alt="MorpheAI Logo"
+              fill
+              className="object-contain drop-shadow-[0_0_20px_rgba(30,144,255,0.3)] transition-all group-hover:drop-shadow-[0_0_30px_rgba(30,144,255,0.5)] group-hover:scale-105"
+              priority
+            />
+          </Link>
+          
+          {/* Stylish Write Button */}
+          <Link href="/journal/new" className="w-full px-4">
+            <button className="group relative w-full px-6 py-5 bg-gradient-to-r from-morphe-blue via-light-ai-blue to-amethyst-spirit rounded-2xl font-bold shadow-2xl shadow-morphe-blue/50 hover:shadow-morphe-blue/70 transition-all duration-300 hover:scale-[1.02] overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+              <div className="relative flex items-center justify-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center backdrop-blur-sm group-hover:rotate-90 transition-transform duration-300 shadow-lg">
+                  <Plus size={28} strokeWidth={3} className="text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="text-lg font-bold tracking-wide text-white drop-shadow-lg">Записать сон</div>
+                  <div className="text-sm text-white/90 font-normal drop-shadow">Сохрани своё сновидение</div>
+                </div>
               </div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isImporting}
-            className="btn-secondary flex items-center space-x-1 px-3 py-2 text-sm"
-            title="Импорт"
-          >
-            <Upload size={16} />
-            {isImporting ? '...' : ''}
-          </button>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,.txt,.csv,text/plain,text/csv,application/json"
-            onChange={handleImport}
-            className="hidden"
-          />
-
-          <Link href="/journal/new">
-            <button className="btn-primary flex items-center space-x-2 shadow-xl">
-              <Plus size={20} />
-              <span className="hidden sm:inline">Записать</span>
             </button>
           </Link>
         </div>
-      </div>
-
-      <div>
-        <h1 className="text-3xl font-bold text-mythic-ivory tracking-tight">Дневник снов</h1>
-        <p className="text-mythic-ivory/50 text-sm mt-1">Записи ваших сновидений</p>
-      </div>
+      </header>
 
       {/* Search and Filter */}
       <div className="flex space-x-3">
@@ -376,7 +208,7 @@ function JournalContent() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="space-y-3">
+        <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="card p-5 animate-pulse">
               <div className="flex items-start space-x-4">
@@ -395,26 +227,9 @@ function JournalContent() {
         </div>
       )}
 
-      {/* Debug info (development only) */}
-      {process.env.NODE_ENV === 'development' && !isLoading && (
-        <div className="mb-4 p-3 bg-mythic-ivory/5 rounded-lg text-xs text-mythic-ivory/60 space-y-1">
-          <p>🔍 Debug: Всего снов в базе: <strong>{dreams.length}</strong></p>
-          <p>🔍 Debug: Отфильтровано: <strong>{filteredDreams.length}</strong></p>
-          <button 
-            onClick={() => {
-              console.log('🔄 Принудительная перезагрузка снов...')
-              loadDreams()
-            }}
-            className="mt-2 text-morphe-blue hover:text-light-ai-blue underline"
-          >
-            🔄 Перезагрузить сны
-          </button>
-        </div>
-      )}
-
       {/* Dreams List */}
       {!isLoading && filteredDreams.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredDreams.map((dream) => (
             <DreamCard 
               key={dream.id} 
@@ -455,13 +270,27 @@ function JournalContent() {
 export default function JournalPage() {
   return (
     <Suspense fallback={
-      <div className="space-y-5 pb-6 animate-fade-in">
-        <Header />
-        <div>
-          <h1 className="text-3xl font-bold text-mythic-ivory tracking-tight">Дневник снов</h1>
-          <p className="text-mythic-ivory/50 text-sm mt-1">Записи ваших сновидений</p>
-        </div>
-        <div className="space-y-3">
+      <div className="space-y-4 pb-6 animate-fade-in">
+        {/* Beautiful Header with Logo - Loading State */}
+        <header className="text-center pt-6 relative mb-1">
+          <div className="absolute inset-0 bg-gradient-to-b from-morphe-blue/10 to-transparent blur-3xl" />
+          <div className="relative z-10 flex flex-col items-center space-y-3">
+            <div className="relative w-48 h-16 opacity-50">
+              <Image
+                src="https://i.postimg.cc/nznsrDSf/cbb6618b-6539-4097-a39c-81dc01fe57d4.png"
+                alt="MorpheAI Logo"
+                fill
+                className="object-contain drop-shadow-[0_0_20px_rgba(30,144,255,0.3)]"
+                priority
+              />
+            </div>
+            <div className="w-full px-4">
+              <div className="w-full h-16 bg-mythic-ivory/10 rounded-2xl animate-pulse" />
+            </div>
+          </div>
+        </header>
+        
+        <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="card p-5 animate-pulse">
               <div className="flex items-start space-x-4">

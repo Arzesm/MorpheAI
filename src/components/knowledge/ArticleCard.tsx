@@ -45,6 +45,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       href={articleUrl}
       target={isExternal ? "_blank" : "_self"}
       rel={isExternal ? "noopener noreferrer" : undefined}
+      className="block mb-6"
     >
       <div className="card p-5 hover:scale-[1.01] transition-all cursor-pointer group">
         <div className="flex items-start space-x-4">

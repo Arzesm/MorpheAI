@@ -9,14 +9,14 @@ export const COLORS = {
 } as const
 
 export const EMOTIONS = [
-  { name: 'Радость', emoji: '😄', color: 'text-light-ai-blue' },
-  { name: 'Спокойствие', emoji: '😊', color: 'text-morphe-blue' },
-  { name: 'Тревога', emoji: '😟', color: 'text-amethyst-spirit' },
+  { name: 'Радость', emoji: '😊', color: 'text-light-ai-blue' },
+  { name: 'Спокойствие', emoji: '😌', color: 'text-morphe-blue' },
+  { name: 'Тревога', emoji: '😰', color: 'text-amethyst-spirit' },
   { name: 'Страх', emoji: '😨', color: 'text-red-500' },
   { name: 'Грусть', emoji: '😢', color: 'text-blue-400' },
   { name: 'Удивление', emoji: '😲', color: 'text-light-ai-blue' },
   { name: 'Ностальгия', emoji: '🥺', color: 'text-amethyst-spirit' },
-  { name: 'Экстаз', emoji: '🤩', color: 'text-morphe-blue' }
+  { name: 'Экстаз', emoji: '😍', color: 'text-morphe-blue' }
 ] as const
 
 export const ARCHETYPES = [

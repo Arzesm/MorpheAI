@@ -86,26 +86,6 @@ export const dreamService = {
     return data as Dream[]
   },
 
-  // Получить только легкие поля (без content) - быстрее для статистики и календаря
-  async getAllLight() {
-    const { data, error } = await supabase
-      .from('dreams')
-      .select('id, title, date, emotion, emotion_emoji, dream_type, tags, archetype, created_at, has_interpretation, has_image, image_url')
-      .order('date', { ascending: false })
-    
-    if (error) {
-      console.error('Error fetching dreams (light):', error)
-      return []
-    }
-    
-    // Преобразуем в полный формат Dream с пустым content
-    return (data || []).map((item: any) => ({
-      ...item,
-      content: '', // Пустой content для совместимости
-      interpretation: undefined
-    })) as Dream[]
-  },
-
   // Получить сон по ID
   async getById(id: string) {
     const { data, error } = await supabase

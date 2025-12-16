@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Play, Pause, Volume2, Clock } from 'lucide-react'
-import Header from '@/components/Header'
+import Link from 'next/link'
+import Image from 'next/image'
 import MeditationCard from '@/components/meditate/MeditationCard'
 import SoundCard from '@/components/meditate/SoundCard'
 import TimerModal from '@/components/meditate/TimerModal'
@@ -12,36 +13,31 @@ export default function MeditatePage() {
 
   const meditations = [
     {
-      id: 1,
-      title: 'Путешествие в мир снов',
-      duration: '15 мин',
-      description: 'Медитация для подготовки к осознанным сновидениям',
-      icon: '🌙',
-      color: 'from-morphe-blue to-amethyst-spirit'
+      id: 'own-rhythm',
+      title: 'Свой ритм',
+      duration: 'Настраиваемый',
+      description: 'Настрой свой личный ритм дыхания',
+      icon: '🎯',
+      color: 'from-morphe-blue to-amethyst-spirit',
+      link: '/meditate/breathing/own-rhythm'
     },
     {
-      id: 2,
-      title: 'Расслабление перед сном',
-      duration: '10 мин',
-      description: 'Глубокое расслабление для качественного сна',
-      icon: '😌',
-      color: 'from-amethyst-spirit to-morphe-blue'
+      id: 'rhythmic',
+      title: 'Ритмическое дыхание',
+      duration: '4-8-3-3',
+      description: 'Дыхание из тибетской йоги',
+      icon: '🧘',
+      color: 'from-amethyst-spirit to-morphe-blue',
+      link: '/meditate/breathing/rhythmic'
     },
     {
-      id: 3,
-      title: 'Работа с архетипами',
-      duration: '20 мин',
-      description: 'Встреча с вашими внутренними архетипами',
-      icon: '🔮',
-      color: 'from-light-ai-blue to-morphe-blue'
-    },
-    {
-      id: 4,
-      title: 'Утренняя медитация',
-      duration: '8 мин',
-      description: 'Интеграция опыта сновидений в реальность',
-      icon: '☀️',
-      color: 'from-morphe-blue to-light-ai-blue'
+      id: 'simple',
+      title: 'Простое дыхание',
+      duration: '5-15 мин',
+      description: 'Спокойствие и гармония эмоций',
+      icon: '🌸',
+      color: 'from-light-ai-blue to-morphe-blue',
+      link: '/meditate/breathing/simple'
     }
   ]
 
@@ -49,7 +45,7 @@ export default function MeditatePage() {
     {
       id: 1,
       name: 'Дождь',
-      icon: '🌧️',
+      icon: '💧',
       audio: '/sounds/rain.mp3'
     },
     {
@@ -61,7 +57,7 @@ export default function MeditatePage() {
     {
       id: 3,
       name: 'Лес',
-      icon: '🌲',
+      icon: '🌳',
       audio: '/sounds/forest.mp3'
     },
     {
@@ -73,28 +69,38 @@ export default function MeditatePage() {
     {
       id: 5,
       name: 'Белый шум',
-      icon: '⚪',
+      icon: '🎵',
       audio: '/sounds/white-noise.mp3'
     }
   ]
 
   return (
     <div className="space-y-6 pb-6 animate-fade-in">
-      <Header />
-      
-      <div>
-        <h1 className="text-3xl font-bold text-mythic-ivory tracking-tight">Медитации</h1>
-        <p className="text-mythic-ivory/60 text-sm mt-1 font-medium">
-          Практики для работы со сновидениями
-        </p>
-      </div>
+      {/* Beautiful Header with Logo */}
+      <header className="text-center py-6 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-amethyst-spirit/10 to-transparent blur-3xl" />
+        <div className="relative z-10 flex flex-col items-center space-y-2">
+          <Link href="/portal" className="relative w-48 h-16 cursor-pointer group">
+            <Image
+              src="https://i.postimg.cc/nznsrDSf/cbb6618b-6539-4097-a39c-81dc01fe57d4.png"
+              alt="MorpheAI Logo"
+              fill
+              className="object-contain drop-shadow-[0_0_20px_rgba(147,51,234,0.3)] transition-all group-hover:drop-shadow-[0_0_30px_rgba(147,51,234,0.5)] group-hover:scale-105"
+              priority
+            />
+          </Link>
+          <p className="text-mythic-ivory/60 text-sm font-medium tracking-wide">
+            Практики для работы со сновидениями
+          </p>
+        </div>
+      </header>
 
       {/* Guided Meditations */}
       <section>
         <h2 className="text-lg font-semibold text-mythic-ivory mb-3">
           Управляемые медитации
         </h2>
-        <div className="space-y-3">
+        <div className="space-y-6">
           {meditations.map((meditation) => (
             <MeditationCard key={meditation.id} meditation={meditation} />
           ))}

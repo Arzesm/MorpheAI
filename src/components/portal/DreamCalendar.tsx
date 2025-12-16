@@ -1,39 +1,57 @@
 'use client'
 
 import { Calendar, Loader2, ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useDreamsLight } from '@/hooks/useDreams'
-import { Dream } from '@/lib/supabase'
+import { dreamService, Dream } from '@/lib/supabase'
 
 export default function DreamCalendar() {
   const router = useRouter()
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const { dreams: allDreams, isLoading } = useDreamsLight()
+  const [dreams, setDreams] = useState<Dream[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [dreamsByDate, setDreamsByDate] = useState<Record<number, Dream[]>>({})
   const [selectedDayDreams, setSelectedDayDreams] = useState<Dream[] | null>(null)
   const [showModal, setShowModal] = useState(false)
   
-  // Группируем сны по дням текущего месяца (мемоизация)
-  const dreamsByDate = useMemo(() => {
-    if (!allDreams || allDreams.length === 0) return {}
-    
-    const dreamsByDay: Record<number, Dream[]> = {}
-    allDreams.forEach((dream) => {
-      const dreamDate = new Date(dream.date)
-      if (
-        dreamDate.getMonth() === currentMonth.getMonth() &&
-        dreamDate.getFullYear() === currentMonth.getFullYear()
-      ) {
-        const day = dreamDate.getDate()
-        if (!dreamsByDay[day]) {
-          dreamsByDay[day] = []
+  // Загрузка снов из Supabase
+  useEffect(() => {
+    const loadDreams = async () => {
+      setIsLoading(true)
+      try {
+        const allDreams = await dreamService.getAll()
+        if (allDreams) {
+          setDreams(allDreams)
+          
+          // Группируем сны по дням текущего месяца
+          const dreamsByDay: Record<number, Dream[]> = {}
+          allDreams.forEach((dream) => {
+            const dreamDate = new Date(dream.date)
+            if (
+              dreamDate.getMonth() === currentMonth.getMonth() &&
+              dreamDate.getFullYear() === currentMonth.getFullYear()
+            ) {
+              const day = dreamDate.getDate()
+              if (!dreamsByDay[day]) {
+                dreamsByDay[day] = []
+              }
+              dreamsByDay[day].push(dream)
+            }
+          })
+          setDreamsByDate(dreamsByDay)
+          console.log('📅 Загружено снов для календаря:', allDreams.length)
+          console.log('📅 Сны по датам:', dreamsByDay)
         }
-        dreamsByDay[day].push(dream)
+      } catch (error) {
+        console.error('❌ Ошибка загрузки снов для календаря:', error)
+      } finally {
+        setIsLoading(false)
       }
-    })
-    return dreamsByDay
-  }, [allDreams, currentMonth])
+    }
+    
+    loadDreams()
+  }, [currentMonth])
   
   // Навигация по месяцам
   const goToPreviousMonth = () => {
@@ -116,7 +134,7 @@ export default function DreamCalendar() {
     switch (type) {
       case 'lucid': return '✨'
       case 'nightmare': return '😱'
-      case 'epic': return '⭐'
+      case 'epic': return '🌟'
       default: return '💭'
     }
   }
@@ -124,7 +142,7 @@ export default function DreamCalendar() {
   const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 
   return (
-    <div className="mb-2">
+    <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="section-header flex items-center">
           <Calendar size={22} className="mr-2 text-morphe-blue" />
@@ -166,7 +184,7 @@ export default function DreamCalendar() {
         </div>
 
         {/* Days of week */}
-        <div className="grid grid-cols-7 gap-1.5 mb-4">
+        <div className="grid grid-cols-7 gap-1 mb-3">
           {days.map((day) => (
             <div key={day} className="text-center text-mythic-ivory/50 text-xs font-semibold tracking-wide py-2">
               {day}
@@ -176,13 +194,11 @@ export default function DreamCalendar() {
 
         {/* Calendar grid */}
         {isLoading ? (
-          <div className="grid grid-cols-7 gap-1.5 animate-pulse">
-            {Array.from({ length: 35 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-mythic-ivory/10 rounded-xl" />
-            ))}
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-morphe-blue" />
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-7 gap-1">
             {/* Empty cells for days before month starts */}
             {Array.from({ length: firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1 }).map((_, i) => (
               <div key={`empty-${i}`} className="aspect-square" />
@@ -218,8 +234,8 @@ export default function DreamCalendar() {
         )}
 
         {/* Legend */}
-        <div className="divider my-5" />
-        <div className="flex flex-wrap gap-3 gap-y-2.5 text-xs">
+        <div className="divider my-4" />
+        <div className="flex flex-wrap gap-3 text-xs">
           <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-morphe-blue/10 backdrop-blur-sm">
             <div className="w-2.5 h-2.5 rounded-full bg-morphe-blue shadow-lg shadow-morphe-blue/50" />
             <span className="text-mythic-ivory/80 font-medium">Обычный</span>
@@ -269,7 +285,7 @@ export default function DreamCalendar() {
                   >
                     <div className="card p-4 hover:scale-[1.02] transition-all cursor-pointer group">
                       <div className="flex items-start space-x-3">
-                        <div className="text-3xl transform transition-transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
+                        <div className="text-3xl">
                           {getDreamTypeEmoji(dream.dream_type)}
                         </div>
                         <div className="flex-1 min-w-0">

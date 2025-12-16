@@ -181,14 +181,14 @@ export default function MoonPhase() {
       <div className="absolute bottom-0 left-0 w-40 h-40 bg-amethyst-spirit/20 rounded-full blur-3xl" style={{ animationDelay: '1s' }} />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-4 gap-4">
-          <div className="flex items-center space-x-4 gap-4">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-4">
             <div className="relative">
               <div className="absolute inset-0 bg-morphe-blue/30 rounded-full blur-xl animate-pulse" />
               <div className="relative text-6xl animate-float">{moonData.emoji}</div>
             </div>
             <div>
-              <div className="flex items-center space-x-2 gap-2 mb-1">
+              <div className="flex items-center space-x-2 mb-1">
                 <h3 className="text-2xl font-bold text-mythic-ivory tracking-tight">{moonData.phase}</h3>
                 <Sparkles size={18} className="text-light-ai-blue" />
               </div>
@@ -234,7 +234,7 @@ export default function MoonPhase() {
           </p>
         </div>
         
-        <div className="flex items-center space-x-2 gap-2 text-xs text-mythic-ivory/50 mt-3">
+        <div className="flex items-center space-x-2 text-xs text-mythic-ivory/50 mt-3">
           <MapPin size={12} />
           <span>{location}</span>
         </div>

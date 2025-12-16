@@ -22,9 +22,9 @@ export default function NewDreamPage() {
   })
 
   const emotions = [
-    { name: 'Радость', emoji: '😄' },
-    { name: 'Спокойствие', emoji: '😊' },
-    { name: 'Тревога', emoji: '😟' },
+    { name: 'Радость', emoji: '😊' },
+    { name: 'Спокойствие', emoji: '😌' },
+    { name: 'Тревога', emoji: '😰' },
     { name: 'Страх', emoji: '😨' },
     { name: 'Грусть', emoji: '😢' },
     { name: 'Удивление', emoji: '😲' },
@@ -35,7 +35,7 @@ export default function NewDreamPage() {
     { name: 'normal', label: 'Обычный', emoji: '💭', color: 'bg-morphe-blue' },
     { name: 'lucid', label: 'Осознанный', emoji: '✨', color: 'bg-amethyst-spirit' },
     { name: 'nightmare', label: 'Кошмар', emoji: '😱', color: 'bg-red-500' },
-    { name: 'epic', label: 'Эпический', emoji: '⭐', color: 'bg-yellow-500' }
+    { name: 'epic', label: 'Эпический', emoji: '🌟', color: 'bg-yellow-500' }
   ]
 
   const handleAddTag = () => {

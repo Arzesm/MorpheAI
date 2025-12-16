@@ -9,7 +9,7 @@ import SleepTips from '@/components/portal/SleepTips'
 
 export default function PortalPage() {
   return (
-    <div className="space-y-8 pb-6 animate-fade-in">
+    <div className="space-y-6 pb-6 animate-fade-in">
       {/* Modern Hero Header */}
       <header className="text-center py-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-morphe-blue/10 to-transparent blur-3xl" />

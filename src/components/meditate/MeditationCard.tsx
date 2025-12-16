@@ -5,25 +5,28 @@ import Link from 'next/link'
 
 interface MeditationCardProps {
   meditation: {
-    id: number
+    id: number | string
     title: string
     duration: string
     description: string
     icon: string
     color: string
+    link?: string
   }
 }
 
 export default function MeditationCard({ meditation }: MeditationCardProps) {
+  const href = meditation.link || `/meditate/${meditation.id}`
+  
   return (
-    <Link href={`/meditate/${meditation.id}`}>
+    <Link href={href} className="block mb-6">
       <div className="card p-5 hover:scale-[1.01] transition-all cursor-pointer relative overflow-hidden group">
         <div className={`absolute inset-0 bg-gradient-to-br ${meditation.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
         
         <div className="relative z-10 flex items-center space-x-4">
           <div className="relative">
             <div className="absolute inset-0 bg-morphe-blue/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative text-5xl p-2 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-2xl backdrop-blur-sm">
+            <div className="relative text-3xl p-3 bg-gradient-to-br from-mythic-ivory/5 to-mythic-ivory/10 rounded-2xl backdrop-blur-sm">
               {meditation.icon}
             </div>
           </div>

@@ -28,7 +28,7 @@ export default function SoundCard({ sound }: SoundCardProps) {
       }`}
     >
       <div className="flex flex-col items-center space-y-3">
-        <div className="text-4xl">{sound.icon}</div>
+        <div className="text-3xl">{sound.icon}</div>
         <h3 className="text-mythic-ivory font-medium text-sm">{sound.name}</h3>
         <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
           isPlaying

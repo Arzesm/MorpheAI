@@ -32,6 +32,56 @@ export default function KnowledgePage() {
     return icons[category] || '📚'
   }
 
+  // Проверка, нужно ли обновлять статьи (раз в неделю по понедельникам)
+  const shouldUpdateArticles = () => {
+    const lastUpdate = localStorage.getItem('articles_last_update')
+    if (!lastUpdate) return true
+
+    const lastUpdateDate = new Date(lastUpdate)
+    const today = new Date()
+    
+    // Проверяем, прошла ли неделя (7 дней)
+    const daysDiff = Math.floor((today.getTime() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24))
+    
+    // Если прошло 7+ дней И сегодня понедельник (1), обновляем
+    const isMonday = today.getDay() === 1
+    
+    if (daysDiff >= 7 && isMonday) {
+      console.log('📅 Понедельник! Время обновить статьи')
+      return true
+    }
+    
+    // Если прошло 7+ дней, но не понедельник, ждем понедельника
+    if (daysDiff >= 7 && !isMonday) {
+      console.log('⏳ Прошла неделя, но ждем понедельника для обновления')
+    }
+    
+    return false
+  }
+
+  // Загрузка статей из кеша
+  const loadCachedArticles = () => {
+    const cached = localStorage.getItem('cached_articles')
+    if (cached) {
+      try {
+        const parsedArticles = JSON.parse(cached)
+        console.log('💾 Загружены статьи из кеша:', parsedArticles.length)
+        return parsedArticles
+      } catch (e) {
+        console.error('❌ Ошибка парсинга кеша:', e)
+        return null
+      }
+    }
+    return null
+  }
+
+  // Сохранение статей в кеш
+  const cacheArticles = (articlesData: any[]) => {
+    localStorage.setItem('cached_articles', JSON.stringify(articlesData))
+    localStorage.setItem('articles_last_update', new Date().toISOString())
+    console.log('💾 Статьи сохранены в кеш')
+  }
+
   // Автоматическая загрузка актуальных статей при открытии страницы
   useEffect(() => {
     const loadLatestArticles = async () => {
@@ -39,7 +89,21 @@ export default function KnowledgePage() {
       setHasSearched(true)
 
       try {
-        console.log('🔄 Загрузка актуальных статей о снах из RSS фидов...')
+        // Проверяем, нужно ли обновлять статьи
+        const needsUpdate = shouldUpdateArticles()
+        
+        if (!needsUpdate) {
+          // Загружаем из кеша
+          const cached = loadCachedArticles()
+          if (cached && cached.length > 0) {
+            setArticles(cached)
+            setIsSearching(false)
+            console.log('✅ Использованы закешированные статьи')
+            return
+          }
+        }
+
+        console.log('🔄 Загрузка новых актуальных статей о снах...')
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -51,7 +115,7 @@ export default function KnowledgePage() {
           return
         }
         
-        // Используем новую функцию для получения новостей из RSS фидов (без OpenAI API)
+        // Загружаем новые статьи через Edge Function
         const edgeFunctionUrl = `${supabaseUrl}/functions/v1/fetch-sleep-news`
         
         const response = await fetch(edgeFunctionUrl, {
@@ -65,7 +129,25 @@ export default function KnowledgePage() {
           })
         })
 
-        const data = await response.json()
+        let data
+        try {
+          data = await response.json()
+        } catch (parseError) {
+          console.error('❌ Ошибка парсинга ответа:', parseError)
+          const text = await response.text()
+          console.error('Текст ответа:', text.substring(0, 500))
+          setArticles([])
+          setHasSearched(true)
+          return
+        }
+
+        console.log('📦 Получен ответ от API:', {
+          ok: response.ok,
+          status: response.status,
+          hasArticles: !!data.articles,
+          articlesCount: data.articles?.length || 0,
+          success: data.success
+        })
 
         if (!response.ok) {
           console.error('❌ API вернул ошибку:', data)
@@ -74,29 +156,40 @@ export default function KnowledgePage() {
           return
         }
 
-        console.log('✅ Актуальные обсуждения загружены:', data.articles?.length || 0)
+        // Проверяем наличие статей
+        const articles = data.articles || data.article || []
+        console.log('✅ Актуальные статьи загружены:', articles.length)
 
-        if (data.articles && data.articles.length > 0) {
-          const formattedArticles = data.articles.map((article: any, index: number) => ({
-            id: `reddit-${Date.now()}-${index}`,
-            title: article.title,
+        if (articles && Array.isArray(articles) && articles.length > 0) {
+          const formattedArticles = articles.map((article: any, index: number) => ({
+            id: `article-${Date.now()}-${index}`,
+            title: article.title || 'Без названия',
             category: article.category || 'all',
             categoryName: article.categoryName || 'Все',
-            description: article.description,
-            readTime: article.readTime || '3 мин',
+            description: article.description || 'Читайте статью на оригинальном источнике.',
+            readTime: article.readTime || '5 мин',
             icon: getIconForCategory(article.category || 'all'),
             isFavorite: false,
             views: Math.floor(Math.random() * 5000) + 100,
             publishedDate: article.publishedDate || new Date().toISOString().split('T')[0],
-            url: article.url, // Ссылка на Reddit
-            source: article.source || 'Reddit'
+            url: article.url || '',
+            source: article.source || 'Источник'
           }))
 
           setArticles(formattedArticles)
-          console.log(`✅ Отображено ${formattedArticles.length} актуальных обсуждений`)
+          // Кешируем новые статьи
+          cacheArticles(formattedArticles)
+          console.log(`✅ Отображено ${formattedArticles.length} новых статей`)
         } else {
-          console.warn('⚠️ Не удалось загрузить обсуждения')
-          setArticles([])
+          console.warn('⚠️ Статьи не найдены или пустой массив. Данные:', data)
+          // Пробуем загрузить из кеша
+          const cached = loadCachedArticles()
+          if (cached && cached.length > 0) {
+            setArticles(cached)
+            console.log('✅ Использованы закешированные статьи (fallback)')
+          } else {
+            setArticles([])
+          }
           setHasSearched(true)
         }
 
@@ -139,25 +232,43 @@ export default function KnowledgePage() {
           body: JSON.stringify({ category: category })
         })
         
-        const data = await response.json()
-        if (data.articles && data.articles.length > 0) {
-          const formattedArticles = data.articles.map((article: any, index: number) => ({
-            id: `reddit-${Date.now()}-${index}`,
-            title: article.title,
+        let data
+        try {
+          data = await response.json()
+        } catch (parseError) {
+          console.error('❌ Ошибка парсинга ответа:', parseError)
+          setArticles([])
+          setHasSearched(true)
+          return
+        }
+
+        if (!response.ok) {
+          console.error('❌ API вернул ошибку:', data)
+          setArticles([])
+          setHasSearched(true)
+          return
+        }
+
+        const articles = data.articles || []
+        if (articles && Array.isArray(articles) && articles.length > 0) {
+          const formattedArticles = articles.map((article: any, index: number) => ({
+            id: `article-${Date.now()}-${index}`,
+            title: article.title || 'Без названия',
             category: article.category || 'all',
             categoryName: article.categoryName || 'Все',
-            description: article.description,
-            readTime: article.readTime || '3 мин',
+            description: article.description || 'Читайте статью на оригинальном источнике.',
+            readTime: article.readTime || '5 мин',
             icon: getIconForCategory(article.category || 'all'),
             isFavorite: false,
             views: Math.floor(Math.random() * 5000) + 100,
             publishedDate: article.publishedDate || new Date().toISOString().split('T')[0],
-            url: article.url,
-            source: article.source || 'Reddit'
+            url: article.url || '',
+            source: article.source || 'Источник'
           }))
           setArticles(formattedArticles)
           setHasSearched(true)
         } else {
+          console.warn('⚠️ Статьи не найдены')
           setArticles([])
           setHasSearched(true)
         }
@@ -200,46 +311,56 @@ export default function KnowledgePage() {
         })
       })
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        console.error('❌ Ошибка парсинга ответа:', parseError)
+        setArticles([])
+        return
+      }
 
       if (!response.ok) {
         console.error('❌ Ошибка загрузки:', data)
-        throw new Error(data.details || data.error || 'Ошибка загрузки')
+        setArticles([])
+        return
       }
 
-      if (data.articles && data.articles.length > 0) {
-        // Локальный поиск по загруженным обсуждениям
+      const articles = data.articles || []
+      if (articles && Array.isArray(articles) && articles.length > 0) {
+        // Локальный поиск по загруженным статьям
         const searchLower = query.toLowerCase()
-        const filtered = data.articles.filter((article: any) => {
+        const filtered = articles.filter((article: any) => {
           const matchesSearch = 
-            article.title.toLowerCase().includes(searchLower) ||
-            article.description.toLowerCase().includes(searchLower) ||
-            article.source.toLowerCase().includes(searchLower)
+            (article.title || '').toLowerCase().includes(searchLower) ||
+            (article.description || '').toLowerCase().includes(searchLower) ||
+            (article.source || '').toLowerCase().includes(searchLower)
           
           const matchesCategory = category === 'all' || article.category === category
           
           return matchesSearch && matchesCategory
         })
 
-        console.log(`✅ Найдено ${filtered.length} обсуждений по запросу "${query}"`)
+        console.log(`✅ Найдено ${filtered.length} статей по запросу "${query}"`)
 
         const formattedArticles = filtered.map((article: any, index: number) => ({
-          id: `reddit-search-${Date.now()}-${index}`,
-          title: article.title,
+          id: `article-search-${Date.now()}-${index}`,
+          title: article.title || 'Без названия',
           category: article.category || 'all',
           categoryName: article.categoryName || 'Все',
-          description: article.description,
-          readTime: article.readTime || '3 мин',
+          description: article.description || 'Читайте статью на оригинальном источнике.',
+          readTime: article.readTime || '5 мин',
           icon: getIconForCategory(article.category || 'all'),
           isFavorite: false,
           views: Math.floor(Math.random() * 5000) + 100,
           publishedDate: article.publishedDate || new Date().toISOString().split('T')[0],
-          url: article.url,
-          source: article.source || 'Reddit'
+          url: article.url || '',
+          source: article.source || 'Источник'
         }))
 
         setArticles(formattedArticles)
       } else {
+        console.warn('⚠️ Статьи не найдены')
         setArticles([])
       }
 
@@ -282,6 +403,24 @@ export default function KnowledgePage() {
         <p className="text-mythic-ivory/60 text-sm mt-1 font-medium">
           Актуальные новости и исследования о снах из проверенных научных источников
         </p>
+        {(() => {
+          const lastUpdate = localStorage.getItem('articles_last_update')
+          if (lastUpdate) {
+            const date = new Date(lastUpdate)
+            const formatted = date.toLocaleDateString('ru-RU', { 
+              day: 'numeric', 
+              month: 'long',
+              year: 'numeric'
+            })
+            return (
+              <p className="text-mythic-ivory/40 text-xs mt-2 flex items-center">
+                <span className="mr-1">📅</span>
+                Обновлено: {formatted} • Следующее обновление в понедельник
+              </p>
+            )
+          }
+          return null
+        })()}
       </div>
 
       {/* Search */}
@@ -355,7 +494,7 @@ export default function KnowledgePage() {
         </h2>
         
         {filteredArticles.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-6">
             {filteredArticles.map((article) => (
               <ArticleCard key={article.id} article={article} />
             ))}
