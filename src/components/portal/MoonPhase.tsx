@@ -1,115 +1,110 @@
 'use client'
 
-import { Moon, Sparkles, MapPin } from 'lucide-react'
+import { Moon, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-// Функция расчета фазы луны
+// Точная функция расчета фазы луны
 function getMoonPhaseData(date: Date = new Date()) {
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
+  // Получаем текущую дату и время в UTC
+  const utcDate = Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds()
+  )
   
-  let c = 0
-  let e = 0
-  let jd = 0
-  let b = 0
-
-  if (month < 3) {
-    const yearMod = year - 1
-    const monthMod = month + 12
-    c = Math.floor(yearMod / 100)
-    e = 2 - c + Math.floor(c / 4)
-    jd = Math.floor(365.25 * (yearMod + 4716)) + Math.floor(30.6001 * (monthMod + 1)) + day + e - 1524.5
-  } else {
-    c = Math.floor(year / 100)
-    e = 2 - c + Math.floor(c / 4)
-    jd = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + e - 1524.5
-  }
-
-  b = jd - 2451550.1
-  b /= 29.530588853
-  b -= Math.floor(b)
-
-  // Правильный расчет освещенности луны
-  // От 0 до 0.5 (растущая луна): освещенность от 0% до 100%
-  // От 0.5 до 1 (убывающая луна): освещенность от 100% до 0%
-  let illumination: number
-  if (b < 0.5) {
-    // Растущая луна: 0% -> 100%
-    illumination = Math.round(b * 2 * 100)
-  } else {
-    // Убывающая луна: 100% -> 0%
-    illumination = Math.round((1 - b) * 2 * 100)
-  }
+  // Известное новолуние: 1 января 2000 года, 18:14 UTC
+  const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0)
   
-  // Альтернативный метод (более точный, используя косинус):
-  // illumination = Math.round((1 - Math.cos(b * 2 * Math.PI)) / 2 * 100)
+  // Количество миллисекунд с известного новолуния
+  const msSinceNewMoon = utcDate - knownNewMoon
   
-  let phase = ''
+  // Лунный цикл в миллисекундах (29.530588853 дней)
+  const lunarCycleMs = 29.530588853 * 24 * 60 * 60 * 1000
+  
+  // Текущая фаза луны (от 0 до 1)
+  let phase = (msSinceNewMoon / lunarCycleMs) % 1
+  if (phase < 0) phase += 1
+  
+  // Расчет освещенности (0% - новолуние, 100% - полнолуние)
+  const illumination = Math.round((1 - Math.cos(phase * 2 * Math.PI)) / 2 * 100)
+  
+  // Определение фазы
+  let phaseName = ''
   let emoji = ''
   
-  if (b < 0.0625 || b >= 0.9375) {
-    phase = 'Новолуние'
+  if (phase < 0.03 || phase >= 0.97) {
+    phaseName = 'Новолуние'
     emoji = '🌑'
-  } else if (b < 0.1875) {
-    phase = 'Растущий серп'
+  } else if (phase < 0.22) {
+    phaseName = 'Растущий серп'
     emoji = '🌒'
-  } else if (b < 0.3125) {
-    phase = 'Первая четверть'
+  } else if (phase < 0.28) {
+    phaseName = 'Первая четверть'
     emoji = '🌓'
-  } else if (b < 0.4375) {
-    phase = 'Растущая луна'
+  } else if (phase < 0.47) {
+    phaseName = 'Растущая луна'
     emoji = '🌔'
-  } else if (b < 0.5625) {
-    phase = 'Полнолуние'
+  } else if (phase < 0.53) {
+    phaseName = 'Полнолуние'
     emoji = '🌕'
-  } else if (b < 0.6875) {
-    phase = 'Убывающая луна'
+  } else if (phase < 0.72) {
+    phaseName = 'Убывающая луна'
     emoji = '🌖'
-  } else if (b < 0.8125) {
-    phase = 'Последняя четверть'
+  } else if (phase < 0.78) {
+    phaseName = 'Последняя четверть'
     emoji = '🌗'
   } else {
-    phase = 'Убывающий серп'
+    phaseName = 'Убывающий серп'
     emoji = '🌘'
   }
 
-  return { phase, illumination, emoji }
+  return { phase: phaseName, illumination, emoji }
 }
 
-// Функция определения знака зодиака
-function getZodiacSignData(date: Date = new Date()) {
-  const month = date.getMonth() + 1
-  const day = date.getDate()
+// Функция определения знака зодиака Луны (не солнца!)
+function getMoonZodiacSign(date: Date = new Date()) {
+  // Луна проходит через зодиак за ~27.3 дня (по ~2.3 дня в каждом знаке)
+  // Известная позиция: 16 декабря 2025, Луна в Скорпионе
+  const knownMoonPosition = Date.UTC(2025, 11, 16, 0, 0, 0) // 16 декабря 2025, Луна в Скорпионе
+  const utcDate = Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes()
+  )
+  
+  // Количество дней с известной позиции
+  const daysSince = (utcDate - knownMoonPosition) / (1000 * 60 * 60 * 24)
+  
+  // Лунный зодиакальный цикл ~27.32 дня
+  const zodiacCycle = 27.32
+  const daysPerSign = zodiacCycle / 12 // ~2.28 дня на знак
+  
+  // Определяем позицию в цикле (начинаем со Скорпиона = индекс 7)
+  let position = (7 + (daysSince / daysPerSign)) % 12
+  if (position < 0) position += 12
   
   const signs = [
-    { sign: 'Козерог ♑', start: [12, 22], end: [1, 19] },
-    { sign: 'Водолей ♒', start: [1, 20], end: [2, 18] },
-    { sign: 'Рыбы ♓', start: [2, 19], end: [3, 20] },
-    { sign: 'Овен ♈', start: [3, 21], end: [4, 19] },
-    { sign: 'Телец ♉', start: [4, 20], end: [5, 20] },
-    { sign: 'Близнецы ♊', start: [5, 21], end: [6, 20] },
-    { sign: 'Рак ♋', start: [6, 21], end: [7, 22] },
-    { sign: 'Лев ♌', start: [7, 23], end: [8, 22] },
-    { sign: 'Дева ♍', start: [8, 23], end: [9, 22] },
-    { sign: 'Весы ♎', start: [9, 23], end: [10, 22] },
-    { sign: 'Скорпион ♏', start: [10, 23], end: [11, 21] },
-    { sign: 'Стрелец ♐', start: [11, 22], end: [12, 21] }
+    'Овен ♈',      // 0
+    'Телец ♉',     // 1
+    'Близнецы ♊',  // 2
+    'Рак ♋',       // 3
+    'Лев ♌',       // 4
+    'Дева ♍',      // 5
+    'Весы ♎',      // 6
+    'Скорпион ♏',  // 7
+    'Стрелец ♐',   // 8
+    'Козерог ♑',   // 9
+    'Водолей ♒',   // 10
+    'Рыбы ♓'       // 11
   ]
   
-  for (const { sign, start, end } of signs) {
-    const [startMonth, startDay] = start
-    const [endMonth, endDay] = end
-    
-    if (
-      (month === startMonth && day >= startDay) ||
-      (month === endMonth && day <= endDay)
-    ) {
-      return sign
-    }
-  }
-  
-  return 'Козерог ♑'
+  const signIndex = Math.floor(position)
+  return signs[signIndex] || 'Скорпион ♏'
 }
 
 export default function MoonPhase() {
@@ -119,48 +114,31 @@ export default function MoonPhase() {
     zodiacSign: '',
     emoji: '🌙'
   })
-  const [location, setLocation] = useState<string>('Москва')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Получаем актуальную фазу луны
-    const currentDate = new Date()
-    const moonInfo = getMoonPhaseData(currentDate)
-    const zodiac = getZodiacSignData(currentDate)
-    
-    setMoonData({
-      phase: moonInfo.phase,
-      illumination: moonInfo.illumination,
-      zodiacSign: zodiac,
-      emoji: moonInfo.emoji
-    })
-    setIsLoading(false)
-
-    // Получаем геолокацию пользователя
-    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            // Используем Nominatim API для определения города
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&accept-language=ru`,
-              { cache: 'force-cache' }
-            )
-            const data = await response.json()
-            const city = data.address.city || data.address.town || data.address.village || 'Ваше местоположение'
-            setLocation(city)
-          } catch (error) {
-            console.error('Ошибка определения местоположения:', error)
-            setLocation('Москва')
-          }
-        },
-        (error) => {
-          console.log('Геолокация не разрешена:', error)
-          setLocation('Москва')
-        },
-        { timeout: 10000 }
-      )
+    const loadMoonData = async () => {
+      // Получаем актуальную текущую дату
+      const currentDate = new Date()
+      console.log('📅 Текущая дата:', currentDate.toLocaleDateString('ru-RU'))
+      
+      // Рассчитываем фазу луны
+      const moonInfo = getMoonPhaseData(currentDate)
+      const zodiac = getMoonZodiacSign(currentDate)
+      
+      console.log('🌙 Фаза луны:', moonInfo.phase, 'Освещенность:', moonInfo.illumination + '%')
+      console.log('♏ Луна в знаке:', zodiac)
+      
+      setMoonData({
+        phase: moonInfo.phase,
+        illumination: moonInfo.illumination,
+        zodiacSign: zodiac,
+        emoji: moonInfo.emoji
+      })
+      setIsLoading(false)
     }
+    
+    loadMoonData()
   }, [])
 
   if (isLoading) {
@@ -232,11 +210,6 @@ export default function MoonPhase() {
             {(moonData.phase === 'Растущий серп' || moonData.phase === 'Первая четверть' || moonData.phase === 'Растущая луна') && 'Растущая луна благоприятна для практики осознанных сновидений.'}
             {(moonData.phase === 'Убывающая луна' || moonData.phase === 'Последняя четверть' || moonData.phase === 'Убывающий серп') && 'Убывающая луна помогает отпустить старое и проработать страхи во снах.'}
           </p>
-        </div>
-        
-        <div className="flex items-center space-x-2 text-xs text-mythic-ivory/50 mt-3">
-          <MapPin size={12} />
-          <span>{location}</span>
         </div>
       </div>
     </div>
