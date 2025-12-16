@@ -34,6 +34,8 @@ export default function KnowledgePage() {
 
   // Проверка, нужно ли обновлять статьи (раз в неделю по понедельникам)
   const shouldUpdateArticles = () => {
+    if (typeof window === 'undefined') return true
+    
     const lastUpdate = localStorage.getItem('articles_last_update')
     if (!lastUpdate) return true
 
@@ -61,6 +63,8 @@ export default function KnowledgePage() {
 
   // Загрузка статей из кеша
   const loadCachedArticles = () => {
+    if (typeof window === 'undefined') return null
+    
     const cached = localStorage.getItem('cached_articles')
     if (cached) {
       try {
@@ -77,6 +81,8 @@ export default function KnowledgePage() {
 
   // Сохранение статей в кеш
   const cacheArticles = (articlesData: any[]) => {
+    if (typeof window === 'undefined') return
+    
     localStorage.setItem('cached_articles', JSON.stringify(articlesData))
     localStorage.setItem('articles_last_update', new Date().toISOString())
     console.log('💾 Статьи сохранены в кеш')
@@ -403,7 +409,7 @@ export default function KnowledgePage() {
         <p className="text-mythic-ivory/60 text-sm mt-1 font-medium">
           Актуальные новости и исследования о снах из проверенных научных источников
         </p>
-        {(() => {
+        {typeof window !== 'undefined' && (() => {
           const lastUpdate = localStorage.getItem('articles_last_update')
           if (lastUpdate) {
             const date = new Date(lastUpdate)
